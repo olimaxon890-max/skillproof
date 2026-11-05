@@ -1,0 +1,19 @@
+// SkillProof dizayn tizimi: Bootstrap 5 o'zgaruvchilarini moslashtirish
+@use "sass:color";
+
+$navy: #14235c;
+$violet: #7c3aed;
+$success-c: #12b76a;
+$warning-c: #f5a524;
+$danger-c: #e5484d;
+$ink: #101828;
+$muted: #667085;
+$line: #e6e9f2;
+$bg: #f6f7fb;
+
+$radius: 16px;
+$shadow-sm: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
+$shadow-md: 0 8px 24px rgba(20, 35, 92, .10);
+$shadow-lg: 0 20px 48px rgba(20, 35, 92, .16);
+$gradient: linear-gradient(135deg, $navy 0%, #3b2fa8 55%, $violet 100%);
+

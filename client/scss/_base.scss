@@ -1,0 +1,27 @@
+@use "sass:color";
+@use "variables" as *;
+
+html { scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column; }
+#app { flex: 1; display: flex; flex-direction: column; }
+h1, h2, h3, h4, h5 { letter-spacing: -.02em; font-weight: 700; color: $navy; }
+.text-muted { color: $muted !important; }
+.text-violet { color: $violet !important; }
+.text-navy { color: $navy !important; }
+.bg-soft { background: #fff; }
+.bg-gradient-brand { background: $gradient; color: #fff; }
+.fw-800 { font-weight: 800; }
+.cursor-pointer { cursor: pointer; }
+.btn { transition: all .2s ease; border-radius: 12px; }
+.btn-primary { background: $navy; border-color: $navy;
+  &:hover { background: color.adjust($navy, $lightness: 6%); border-color: color.adjust($navy, $lightness: 6%); transform: translateY(-1px); box-shadow: 0 8px 18px rgba($navy, .25); } }
+.btn-violet { background: $violet; border-color: $violet; color: #fff;
+  &:hover { background: color.adjust($violet, $lightness: -6%); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px rgba($violet, .3); } }
+.btn-light-soft { background: #fff; border: 1px solid $line; color: $navy; &:hover { background: #f1f2fa; color: $navy; } }
+.form-control, .form-select { border-radius: 12px; border-color: $line; }
+.form-label { font-weight: 600; font-size: .875rem; color: #344054; }
+.page-enter { animation: pageIn .45s ease both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+::selection { background: rgba($violet, .2); }
+.table > :not(caption) > * > * { padding: .85rem 1rem; vertical-align: middle; }
+.table thead th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: $muted; font-weight: 700; background: #fafbff; border-bottom: 1px solid $line; }

@@ -1,0 +1,63 @@
+@use "variables" as *;
+
+.card-sp { background: #fff; border: 1px solid $line; border-radius: $radius; box-shadow: $shadow-sm; transition: transform .25s ease, box-shadow .25s ease, border-color .25s;
+  &.hover:hover { transform: translateY(-5px); box-shadow: $shadow-md; border-color: #d3d8ee; } }
+.card-pad { padding: 1.4rem; }
+.card-title-sm { font-size: 1rem; font-weight: 700; color: $navy; margin-bottom: 1rem; }
+
+.stat-card { padding: 1.25rem 1.4rem; display: flex; align-items: center; gap: 1rem;
+  .icon { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; font-size: 1.4rem; flex: none; }
+  .val { font-size: 1.7rem; font-weight: 800; color: $navy; line-height: 1; }
+  .lbl { color: $muted; font-size: .85rem; margin-top: .25rem; }
+  .i-navy { background: #e8ebf8; color: $navy; } .i-violet { background: #f0e8fe; color: $violet; }
+  .i-green { background: #dcf7ea; color: #0b8f52; } .i-yellow { background: #fff2d9; color: #b66d00; } }
+
+.logo { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-weight: 800; color: #fff; font-size: 1.15rem; flex: none; overflow: hidden;
+  img { width: 100%; height: 100%; object-fit: cover; }
+  &.lg { width: 84px; height: 84px; font-size: 1.7rem; border-radius: 22px; } &.sm { width: 38px; height: 38px; font-size: .85rem; border-radius: 11px; } }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: $gradient; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: .85rem; flex: none; }
+
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .28rem .7rem; border-radius: 999px; font-size: .78rem; font-weight: 600; background: #eef0fb; color: $navy; }
+.chip-violet { background: #f0e8fe; color: #5b21b6; }
+.badge-soft { padding: .35rem .75rem; border-radius: 999px; font-weight: 700; font-size: .75rem; display: inline-block;
+  &.full { background: #dcf7ea; color: #067647; } &.interview { background: #e0e7ff; color: #3730a3; }
+  &.review { background: #fff2d9; color: #93570a; } &.no { background: #fee4e2; color: #b42318; }
+  &.pending { background: #f2f4f7; color: #475467; } &.hired { background: #dcf7ea; color: #067647; } &.rejected { background: #fee4e2; color: #b42318; }
+  &.approved { background: #dcf7ea; color: #067647; } &.blocked { background: #fee4e2; color: #b42318; } &.active { background: #dcf7ea; color: #067647; } }
+
+.progress-sp { height: 9px; background: #eceff8; border-radius: 99px; overflow: hidden; position: relative;
+  .bar { height: 100%; border-radius: 99px; background: $gradient; transition: width 1s cubic-bezier(.2, .8, .2, 1); width: 0; }
+  .bar.ok { background: linear-gradient(90deg, #12b76a, #32d583); } .bar.warn { background: linear-gradient(90deg, #f5a524, #fdb022); }
+  .mark { position: absolute; top: -2px; width: 2px; height: 13px; background: $navy; opacity: .55; } }
+
+.score-ring { --v: 0; width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: conic-gradient($violet calc(var(--v) * 1%), #e9ecf7 0);
+  &::before { content: ""; position: absolute; inset: 12px; background: #fff; border-radius: 50%; }
+  span { position: relative; font-size: 2.6rem; font-weight: 800; color: $navy; letter-spacing: -.04em; small { font-size: 1rem; color: $muted; font-weight: 600; } } }
+
+// ---- Skeleton ----
+.skeleton { background: linear-gradient(90deg, #eceff8 25%, #f6f7fc 37%, #eceff8 63%); background-size: 400% 100%; animation: sk 1.3s ease infinite; border-radius: 10px; min-height: 14px;
+  &.line { height: 14px; margin-bottom: .6rem; } &.title { height: 22px; width: 55%; margin-bottom: .9rem; } &.block { height: 120px; } &.circle { width: 56px; height: 56px; border-radius: 16px; } }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+// ---- Toast ----
+.toast-wrap { position: fixed; top: 76px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: .6rem; width: min(380px, calc(100vw - 32px)); }
+.sp-toast { background: #fff; border-radius: 14px; box-shadow: $shadow-lg; border: 1px solid $line; padding: .9rem 1.1rem; display: flex; gap: .75rem; align-items: flex-start; animation: toastIn .35s cubic-bezier(.2, .9, .3, 1.2) both; border-left: 5px solid $navy;
+  i { font-size: 1.25rem; margin-top: 1px; } &.success { border-left-color: $success-c; i { color: $success-c; } } &.error { border-left-color: $danger-c; i { color: $danger-c; } }
+  &.warning { border-left-color: $warning-c; i { color: $warning-c; } } &.out { animation: toastOut .3s ease both; } }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px) scale(.95); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(40px); } }
+
+.empty { text-align: center; padding: 3rem 1rem; color: $muted; i { font-size: 2.6rem; color: #c3c9e0; display: block; margin-bottom: .6rem; } h5 { color: $navy; } }
+.option-card { display: flex; align-items: center; gap: .85rem; padding: .95rem 1.1rem; border: 1.5px solid $line; border-radius: 14px; cursor: pointer; transition: all .18s; background: #fff; margin-bottom: .65rem;
+  &:hover { border-color: $violet; background: #faf7ff; }
+  input { accent-color: $violet; width: 18px; height: 18px; flex: none; }
+  &.selected { border-color: $violet; background: #f5efff; box-shadow: 0 0 0 3px rgba($violet, .12); } }
+.modal-content { border-radius: 20px; border: 0; box-shadow: $shadow-lg; }
+.nav-pills-sp .nav-link { border-radius: 10px; font-weight: 600; color: #475467; &.active { background: $navy; color: #fff; } }
+.compare-pick { cursor: pointer; }
+.timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.1rem; padding: .45rem .9rem; border-radius: 12px; background: #eef0fb; color: $navy; &.low { background: #fee4e2; color: #b42318; animation: pulse 1s infinite; } }
+@keyframes pulse { 50% { opacity: .6; } }
+.q-dot { width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid $line; display: grid; place-items: center; font-weight: 700; font-size: .85rem; background: #fff; cursor: pointer; transition: all .15s;
+  &:hover { border-color: $violet; } &.answered { background: #e8ebf8; border-color: $navy; color: $navy; } &.current { background: $navy; color: #fff; border-color: $navy; } }
+

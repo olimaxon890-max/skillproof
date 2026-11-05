@@ -1,0 +1,33 @@
+{
+  "name": "skillproof",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SkillProof - bilimni tekshirish va ishga qabul qilish platformasi",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "seed": "node server/seed.js --reset",
+    "build:css": "sass --quiet client/scss/main.scss client/css/main.css --style=compressed --no-source-map",
+    "build:static": "node server/build-static.js",
+    "publish:github": "node server/publish-github.js",
+    "test": "node server/selftest.js"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "chart.js": "^4.4.4",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.15.0",
+    "sass": "^1.80.0"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3"
+  }
+}

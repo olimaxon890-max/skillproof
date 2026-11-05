@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: skillproof
+    runtime: docker
+    plan: free
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3000
+

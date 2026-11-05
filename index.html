@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillProof: CV emas, haqiqiy ko'nikma</title>
+<meta name="description" content="Ko'nikmangizni amaliy test bilan tasdiqlang va ish beruvchilarga tekshiriladigan havola yuboring.">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--mut:#94a3b8;--a:#38bdf8;--ok:#4ade80;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f1f5f9;font:16px/1.6 system-ui,Arial,sans-serif}
+.w{max-width:900px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);position:sticky;top:0;background:#0f172af0;z-index:5}
+header .w{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;flex-wrap:wrap;gap:8px}
+.logo{font-weight:800;font-size:20px;color:var(--a)}
+nav button{background:none;border:0;color:var(--mut);font:inherit;font-weight:600;cursor:pointer;padding:6px 10px}
+nav button.on,nav button:hover{color:var(--a)}
+section{display:none;padding:36px 0}section.on{display:block}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:0 0 12px}
+h2{margin:0 0 10px}
+.lead{color:var(--mut);max-width:60ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.btn{background:var(--a);color:#0f172a;border:0;border-radius:10px;padding:11px 20px;font:inherit;font-weight:700;cursor:pointer;margin-top:10px}
+.btn.s{background:transparent;color:var(--a);border:1px solid var(--a)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input{width:100%;background:#0f172a;color:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;margin-top:6px}
+.opt{display:block;width:100%;text-align:left;background:#0f172a;color:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px;font:inherit;cursor:pointer}
+.opt:hover{border-color:var(--a)}.opt.sel{border-color:var(--a);background:#0c4a6e}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;background:var(--a)}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;background:#0c4a6e;color:var(--a);font-size:13px;font-weight:700}
+.big{font-size:56px;font-weight:800;color:var(--a);line-height:1}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.small{font-size:14px;color:var(--mut)}
+code{background:#0f172a;padding:2px 6px;border-radius:6px;word-break:break-all}
+footer{border-top:1px solid var(--line);padding:24px 0;color:var(--mut);font-size:14px;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="w">
+  <span class="logo">✅ SkillProof</span>
+  <nav><button data-p="home" class="on">Bosh sahifa</button><button data-p="tests">Testlar</button><button data-p="profile">Profilim</button><button data-p="verify">Tekshirish</button></nav>
+</div></header>
+
+<div class="w">
+<!-- HOME -->
+<section id="home" class="on">
+  <h1>CV emas, <span style="color:var(--a)">haqiqiy ko'nikma</span></h1>
+  <p class="lead">Ko'nikmangizni amaliy test orqali isbotlang. Ish beruvchi bitta havola bilan natijangizning haqiqiyligini tekshiradi. "Excel bilaman" deb yozish o'rniga isbot ko'rsating.</p>
+  <button class="btn" onclick="go('tests')">Testni boshlash</button>
+  <button class="btn s" onclick="go('verify')">Natijani tekshirish</button>
+  <div class="grid">
+    <div class="card"><b>1. Test topshiring</b><br><span class="small">Vaqt cheklangan, savollar har safar aralashtiriladi.</span></div>
+    <div class="card"><b>2. Nishon oling</b><br><span class="small">Ball va daraja (Boshlang'ich, O'rta, Yuqori) profilingizga qo'shiladi.</span></div>
+    <div class="card"><b>3. Havola yuboring</b><br><span class="small">Ish beruvchi havolani ochib, natijani tekshiradi.</span></div>
+  </div>
+  <h2 style="margin-top:34px">Kimlar uchun?</h2>
+  <div class="grid">
+    <div class="card"><b>Talabalar va yoshlar</b><br><span class="small">Tajribasi yo'q, lekin bilimi bor. Birinchi ishni topish uchun.</span></div>
+    <div class="card"><b>Ish beruvchilar</b><br><span class="small">Intervyuga vaqt sarflashdan oldin real ko'nikmani ko'rish.</span></div>
+  </div>
+</section>
+
+<!-- TESTS -->
+<section id="tests">
+  <h2>Ko'nikma tanlang</h2>
+  <p class="lead">Har bir test 8 ta savol, 6 daqiqa. Tasdiqlash uchun kamida 50% to'plash kerak.</p>
+  <div class="grid" id="tl"></div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between"><b id="qt"></b><span id="tm" class="badge">6:00</span></div>
+    <div class="bar"><i id="pb" style="width:0"></i></div>
+    <p id="qn" class="small"></p>
+    <h3 id="q"></h3>
+    <div id="o"></div>
+    <button class="btn" id="nx" disabled>Keyingi</button>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section id="result">
+  <div class="card" style="text-align:center">
+    <div class="small" id="rs"></div>
+    <div class="big" id="rp"></div>
+    <p id="rl" style="font-size:20px;font-weight:700"></p>
+    <div id="ra"></div>
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section id="profile">
+  <h2>Mening profilim</h2>
+  <label class="small">Ismingiz<input id="pn" maxlength="60" placeholder="Ism Familiya"></label>
+  <div id="pl" class="grid"></div>
+  <p class="small" id="pe"></p>
+</section>
+
+<!-- VERIFY -->
+<section id="verify">
+  <h2>Natijani tekshirish</h2>
+  <p class="lead">Nomzod yuborgan tasdiqlash havolasi yoki kodini kiriting.</p>
+  <input id="vc" placeholder="Havola yoki kodni shu yerga qo'ying">
+  <button class="btn" id="vb">Tekshirish</button>
+  <div id="vr" style="margin-top:16px"></div>
+</section>
+</div>
+
+<footer><div class="w">SkillProof MVP. Natijalar brauzerda saqlanadi, tasdiqlash kodi imzo (checksum) bilan himoyalangan. Keyingi bosqich: server, antiplagiat, kompaniya akkauntlari.</div></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const SK={
+ js:{n:"JavaScript asoslari",e:"💻",q:[
+  ["typeof null nima qaytaradi?",["\"null\"","\"object\"","\"undefined\"","\"number\""],1],
+  ["Qaysi biri o'zgarmas (const) e'lon qilish?",["var a=1","let a=1","const a=1","set a=1"],2],
+  ["[1,2,3].map(x=>x*2) natijasi?",["[1,2,3]","[2,4,6]","6","[1,4,9]"],1],
+  ["=== operatori nimani tekshiradi?",["Faqat qiymatni","Qiymat va turni","Faqat turni","Havolani nusxalaydi"],1],
+  ["Massivga oxiriga element qo'shish metodi?",["push","pop","shift","slice"],0],
+  ["'5'+3 natijasi?",["8","\"53\"","53 (number)","Xato"],1],
+  ["DOM elementni id bo'yicha olish?",["getElement('a')","document.getElementById('a')","document.id('a')","query.id('a')"],1],
+  ["Promise qaysi muammoni hal qiladi?",["Rang berish","Asinxron amallarni boshqarish","Faylni siqish","Xotirani tozalash"],1]]},
+ py:{n:"Python asoslari",e:"🐍",q:[
+  ["len([1,2,3]) nima?",["2","3","4","Xato"],1],
+  ["Qaysi biri ro'yxat (list)?",["(1,2)","{1,2}","[1,2]","<1,2>"],2],
+  ["range(3) hosil qiladi:",["1,2,3","0,1,2","0,1,2,3","3"],1],
+  ["Funksiya e'lon qilish kalit so'zi?",["func","function","def","fn"],2],
+  ["10 // 3 natijasi?",["3.33","3","4","1"],1],
+  ["Lug'at (dict) elementiga kirish?",["d.key","d[key]","d(key)","d->key"],1],
+  ["Matnni kichik harfga o'tkazish?",["s.lower()","s.small()","lower(s)","s.down()"],0],
+  ["Python'da izoh qaysi belgi bilan?",["//","#","--","/* */"],1]]},
+ web:{n:"HTML va CSS",e:"🎨",q:[
+  ["Eng katta sarlavha tegi?",["<h6>","<head>","<h1>","<title>"],2],
+  ["Havola yaratish tegi?",["<link>","<a>","<href>","<url>"],1],
+  ["CSS'da matn rangi xususiyati?",["font-color","text-color","color","fg"],2],
+  ["Flex konteyner uchun qiymat?",["display:flex","position:flex","flex:container","layout:flex"],0],
+  ["Rasm qo'yish uchun teg?",["<image>","<img>","<pic>","<src>"],1],
+  ["CSS'da id selektori belgisi?",[".","#","*","&"],1],
+  ["Mobil moslashuv uchun meta?",["viewport","charset","author","robots"],0],
+  ["margin va padding farqi?",["Farqi yo'q","margin tashqarida, padding ichkarida","margin ichkarida","padding rangni o'zgartiradi"],1]]},
+ xl:{n:"Excel va jadval",e:"📊",q:[
+  ["Yig'indi formulasi?",["=ADD(A1:A5)","=SUM(A1:A5)","=PLUS(A1:A5)","=TOTAL(A1:A5)"],1],
+  ["O'rtacha qiymat?",["=AVG()","=MEAN()","=AVERAGE()","=MID()"],2],
+  ["Shartli formula?",["=IF()","=WHEN()","=CHECK()","=CASE()"],0],
+  ["Absolyut havola belgisi?",["#","$","@","%"],1],
+  ["Qidirish funksiyasi?",["=FIND_ALL","=VLOOKUP","=SEEKV","=GET"],1],
+  ["Ma'lumotni jamlab ko'rsatuvchi vosita?",["Pivot Table","Word Art","Macro Font","Paint"],0],
+  ["Eng katta qiymat?",["=TOP()","=HIGH()","=MAX()","=BIG1()"],2],
+  ["Katakchani qulflash (muzlatish) vositasi?",["Freeze Panes","Lock Font","Hold Row","Pin"],0]]}
+};
+const LV=p=>p>=85?"Yuqori":p>=65?"O'rta":p>=50?"Boshlang'ich":"Tasdiqlanmadi";
+const SECRET="skillproof-mvp";
+const sum=s=>{let h=5381;for(const c of s+SECRET)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h.toString(36)};
+const enc=o=>{const j=JSON.stringify(o);return btoa(unescape(encodeURIComponent(j)))+"."+sum(j)};
+const dec=c=>{try{const[b,s]=c.trim().split(".");const j=decodeURIComponent(escape(atob(b)));return sum(j)===s?JSON.parse(j):null}catch(_){return null}};
+let store=[];try{store=JSON.parse(localStorage.getItem("sp")||"[]")}catch(_){}
+let pname="";try{pname=localStorage.getItem("spn")||""}catch(_){}
+const save=()=>{try{localStorage.setItem("sp",JSON.stringify(store));localStorage.setItem("spn",pname)}catch(_){}};
+const esc=t=>String(t).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+function go(p){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===p));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));
+ if(p==="profile")prof();window.scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.p));
+
+$("tl").innerHTML=Object.keys(SK).map(k=>`<div class="card"><div style="font-size:34px">${SK[k].e}</div><b>${SK[k].n}</b><br><span class="small">8 savol, 6 daqiqa</span><br><button class="btn" data-k="${k}">Boshlash</button></div>`).join("");
+$("tl").onclick=e=>{const k=e.target.dataset.k;if(k)start(k)};
+
+let cur,qs,qi,ans,timer,left;
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function start(k){cur=k;
+ qs=shuf(SK[k].q).map(q=>{const o=q[1].map((t,i)=>({t,c:i===q[2]}));return{q:q[0],o:shuf(o)}});
+ qi=0;ans=[];left=360;clearInterval(timer);
+ timer=setInterval(()=>{left--;$("tm").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");if(left<=0)finish()},1000);
+ $("qt").textContent=SK[k].n;go("quiz");show()}
+function show(){const q=qs[qi];$("qn").textContent=`Savol ${qi+1} / ${qs.length}`;$("pb").style.width=(qi/qs.length*100)+"%";
+ $("q").textContent=q.q;$("nx").disabled=true;$("nx").textContent=qi===qs.length-1?"Yakunlash":"Keyingi";
+ $("o").innerHTML=q.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o.t)}</button>`).join("")}
+$("o").onclick=e=>{const b=e.target.closest(".opt");if(!b)return;
+ document.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel"));b.classList.add("sel");ans[qi]=+b.dataset.i;$("nx").disabled=false};
+$("nx").onclick=()=>{if(qi<qs.length-1){qi++;show()}else finish()};
+function finish(){clearInterval(timer);
+ const ok=qs.filter((q,i)=>ans[i]!==undefined&&q.o[ans[i]].c).length,p=Math.round(ok/qs.length*100),l=LV(p);
+ $("rs").textContent=SK[cur].n+": "+ok+" / "+qs.length;$("rp").textContent=p+"%";
+ $("rl").innerHTML=l==="Tasdiqlanmadi"?'<span class="bad">Tasdiqlanmadi. Qayta urinib ko\'ring.</span>':'<span class="ok">Daraja: '+l+'</span>';
+ let h='';
+ if(p>=50){store=store.filter(s=>s.k!==cur||s.p<p);store.push({k:cur,p,l,d:new Date().toISOString().slice(0,10)});save();h='<button class="btn" onclick="go(\'profile\')">Profilga o\'tish</button> '}
+ h+='<button class="btn s" onclick="go(\'tests\')">Boshqa test</button>';$("ra").innerHTML=h;go("result")}
+
+function prof(){$("pn").value=pname;
+ $("pl").innerHTML=store.length?store.map((s,i)=>`<div class="card"><div style="font-size:30px">${SK[s.k].e}</div><b>${SK[s.k].n}</b><br><span class="badge">${s.l}</span> <b>${s.p}%</b><br><span class="small">${s.d}</span><br><button class="btn s" data-i="${i}">Tasdiqlash havolasini nusxalash</button></div>`).join(""):'<div class="card small">Hali tasdiqlangan ko\'nikma yo\'q. «Testlar» bo\'limidan boshlang.</div>';
+ $("pe").textContent=""}
+$("pn").oninput=e=>{pname=e.target.value;save()};
+$("pl").onclick=async e=>{const i=e.target.dataset.i;if(i===undefined)return;
+ if(!pname.trim()){$("pe").textContent="Avval ismingizni kiriting.";return}
+ const s=store[i],code=enc({n:pname.trim(),s:SK[s.k].n,p:s.p,l:s.l,d:s.d});
+ const url=location.href.split("#")[0]+"#v="+code;
+ try{await navigator.clipboard.writeText(url);$("pe").textContent="Havola nusxalandi. Ish beruvchiga yuboring."}catch(_){prompt("Havolani nusxalang:",url)}};
+
+function check(v){v=v.trim();const m=v.match(/#v=(.+)$/);const o=dec(m?m[1]:v);
+ $("vr").innerHTML=o?`<div class="card"><span class="ok"><b>✔ Tasdiqlangan</b></span><h3>${esc(o.n)}</h3><b>${esc(o.s)}</b><br><span class="badge">${esc(o.l)}</span> <b>${+o.p}%</b><br><span class="small">Sana: ${esc(o.d)}</span></div>`:'<div class="card bad"><b>✖ Kod yaroqsiz yoki o\'zgartirilgan.</b></div>'}
+$("vb").onclick=()=>check($("vc").value);
+if(location.hash.startsWith("#v=")){go("verify");$("vc").value=location.href;check(location.href)}
+</script>
+</body>
+</html>
+
