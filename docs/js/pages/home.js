@@ -22,7 +22,7 @@ const TESTI = [
   ['Jasur Toshmatov', 'Backend dasturchi', "Natijadan zaif tomonlarimni bildim va aynan o'sha mavzularni o'rgandim. Ikkinchi urinishda 85 ball oldim."],
 ];
 const FAQ = [
-  ["SkillProof'dan foydalanish pullikmi?", "Nomzodlar uchun platforma butunlay bepul. Kompaniyalar asosiy imkoniyatlardan bepul foydalanishi mumkin."],
+  ["SkillProve'dan foydalanish pullikmi?", "Nomzodlar uchun platforma butunlay bepul. Kompaniyalar asosiy imkoniyatlardan bepul foydalanishi mumkin."],
   ['Test natijalari qanday hisoblanadi?', "Har bir savol uchun ball beriladi, texnologiyalar bo'yicha o'rtacha hisoblanadi va umumiy bilim darajasi 0 dan 100 gacha ko'rsatiladi."],
   ['Dasturlash topshiriqlari qayerda tekshiriladi?', "Kodingiz serverning asosiy jarayonidan alohida, resurslari cheklangan va tarmoqsiz sandbox muhitida ishga tushiriladi."],
   ['Testni qayta topshirish mumkinmi?', "Ha, har bir urinish tarixda saqlanadi. Kompaniya eng so'nggi va eng yaxshi natijalarni ko'radi."],
@@ -55,7 +55,7 @@ export default async function (ctx) {
   </div></section>
 
   <section class="section alt"><div class="container">
-    <div class="section-head"><span class="eyebrow">Afzalliklar</span><h2>Nega SkillProof?</h2><p>Nomzodlar ham, kompaniyalar ham uchun adolatli va shaffof baholash tizimi.</p></div>
+    <div class="section-head"><span class="eyebrow">Afzalliklar</span><h2>Nega SkillProve?</h2><p>Nomzodlar ham, kompaniyalar ham uchun adolatli va shaffof baholash tizimi.</p></div>
     <div class="row g-2">${WHY.map(([i, t, d]) => html`<div class="col-md-6 col-lg-4"><div class="feature"><div class="icon"><i class="bi ${i}"></i></div><div><h6 class="fw-bold text-navy mb-1">${t}</h6><p class="text-muted small mb-0">${d}</p></div></div></div>`)}</div>
   </div></section>
 

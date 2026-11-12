@@ -41,7 +41,7 @@ export default async function (ctx) {
     $('#vf').onchange = (e) => { verdict = e.target.value; draw(); };
     $('#sort').onchange = (e) => { sort = e.target.value; draw(); };
     ctx.root.querySelectorAll('[data-s]').forEach((c) => (c.onchange = () => { c.checked ? sel.add(+c.dataset.s) : sel.delete(+c.dataset.s); $('#sc').textContent = sel.size; }));
-    $('#csv').onclick = async () => { try { await api.download('/company/candidates.csv' + (jobId ? '?job_id=' + jobId : ''), 'skillproof-nomzodlar.csv'); toast('Hisobot yuklab olindi'); } catch (e) { toast(e.message, 'error'); } };
+    $('#csv').onclick = async () => { try { await api.download('/company/candidates.csv' + (jobId ? '?job_id=' + jobId : ''), 'skillprove-nomzodlar.csv'); toast('Hisobot yuklab olindi'); } catch (e) { toast(e.message, 'error'); } };
     $('#cmp').onclick = compare;
   }
 

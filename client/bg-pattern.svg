@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="35%" stop-color="#f3e8ff"/>
+      <stop offset="70%" stop-color="#fce7f3"/>
+      <stop offset="100%" stop-color="#cffafe"/>
+    </linearGradient>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0.22"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.25"/>
+    </linearGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#6366f1" stroke-width="1" stroke-opacity="0.08"/>
+      <circle cx="60" cy="60" r="1.8" fill="#7c3aed" fill-opacity="0.16"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#grid)"/>
+  <circle cx="220" cy="180" r="280" fill="url(#g1)"/>
+  <circle cx="1380" cy="220" r="320" fill="url(#g2)"/>
+  <circle cx="1250" cy="820" r="290" fill="url(#g1)"/>
+  <circle cx="300" cy="850" r="250" fill="url(#g2)"/>
+  <path d="M-100,650 C320,480 580,840 980,620 C1280,450 1450,700 1700,540 L1700,1050 L-100,1050 Z" fill="url(#g1)" opacity="0.55"/>
+  <path d="M-100,780 C260,620 680,920 1080,720 C1350,590 1500,790 1700,690 L1700,1050 L-100,1050 Z" fill="url(#g2)" opacity="0.55"/>
+  <g stroke="#7c3aed" stroke-opacity="0.16" stroke-width="2" fill="none">
+    <rect x="110" y="360" width="120" height="120" rx="26" transform="rotate(15 170 420)"/>
+    <rect x="1360" y="470" width="140" height="140" rx="30" transform="rotate(-18 1430 540)"/>
+    <polygon points="820,90 870,175 770,175" transform="rotate(12 820 135)"/>
+    <circle cx="760" cy="480" r="95" stroke-dasharray="10 10"/>
+  </g>
+  <g fill="#4f46e5" fill-opacity="0.10" font-family="monospace" font-weight="bold" font-size="38">
+    <text x="90" y="130">&lt;/&gt;</text>
+    <text x="1420" y="140">{ }</text>
+    <text x="1390" y="900">0101</text>
+    <text x="110" y="910">JS / PY</text>
+  </g>
+</svg>
+

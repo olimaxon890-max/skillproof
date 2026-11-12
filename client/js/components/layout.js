@@ -25,7 +25,7 @@ export function renderNav() {
   const link = (h, t) => html`<li class="nav-item"><a class="nav-link ${hash === h || (h !== '#/' && hash.startsWith(h)) ? 'active' : ''}" href="${h}">${t}</a></li>`;
   const initials = u ? ((u.first_name || u.email)[0] + (u.last_name?.[0] || '')).toUpperCase() : '';
   return html`<nav class="navbar navbar-expand-lg sp-nav"><div class="container">
-    <a class="navbar-brand brand" href="#/"><span class="brand-mark"><i class="bi bi-shield-check"></i></span>SkillProof</a>
+    <a class="navbar-brand brand" href="#/"><span class="brand-mark"><i class="bi bi-shield-check"></i></span>SkillProve</a>
     <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menyu"><i class="bi bi-list fs-2"></i></button>
     <div class="collapse navbar-collapse" id="navMenu">
       <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/editor', 'Dasturlash muharriri')}</ul>
@@ -38,12 +38,12 @@ export function renderNav() {
 
 export function renderFooter() {
   return html`<footer class="sp-footer"><div class="container"><div class="row g-4">
-    <div class="col-lg-4"><div class="brand d-flex align-items-center gap-2 fs-4 fw-bold mb-3"><span class="brand-mark" style="width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#14235c,#7c3aed);display:grid;place-items:center;color:#fff"><i class="bi bi-shield-check"></i></span>SkillProof</div>
-      <p class="pe-lg-5">CV emas, bilim muhim. SkillProof nomzodlarning haqiqiy bilimini tekshiradi va kompaniyalarga to'g'ri mutaxassisni topishga yordam beradi.</p></div>
+    <div class="col-lg-4"><div class="brand d-flex align-items-center gap-2 fs-4 fw-bold mb-3"><span class="brand-mark" style="width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#14235c,#7c3aed);display:grid;place-items:center;color:#fff"><i class="bi bi-shield-check"></i></span>SkillProve</div>
+      <p class="pe-lg-5">CV emas, bilim muhim. SkillProve nomzodlarning haqiqiy bilimini tekshiradi va kompaniyalarga to'g'ri mutaxassisni topishga yordam beradi.</p></div>
     <div class="col-6 col-lg-2"><h6>Platforma</h6><a href="#/companies">Kompaniyalar</a><a href="#/jobs">Ish o'rinlari</a><a href="#/editor">Dasturlash muharriri</a></div>
     <div class="col-6 col-lg-3"><h6>Hisob</h6><a href="#/login">Kirish</a><a href="#/register">Nomzod sifatida</a><a href="#/register?role=company">Kompaniya sifatida</a></div>
-    <div class="col-lg-3"><h6>Aloqa</h6><span class="d-block py-1"><i class="bi bi-envelope me-2"></i>info@skillproof.uz</span><span class="d-block py-1"><i class="bi bi-geo-alt me-2"></i>Toshkent, O'zbekiston</span></div>
-  </div><hr class="border-secondary my-4"><div class="small text-center">© ${new Date().getFullYear()} SkillProof. Barcha huquqlar himoyalangan.</div></div></footer>`;
+    <div class="col-lg-3"><h6>Aloqa</h6><span class="d-block py-1"><i class="bi bi-envelope me-2"></i>info@skillprove.uz</span><span class="d-block py-1"><i class="bi bi-geo-alt me-2"></i>Toshkent, O'zbekiston</span></div>
+  </div><hr class="border-secondary my-4"><div class="small text-center">© ${new Date().getFullYear()} SkillProve. Barcha huquqlar himoyalangan.</div></div></footer>`;
 }
 
 /** Dashboard qobig'i: chap menyu + kontent */

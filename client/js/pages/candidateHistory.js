@@ -16,7 +16,7 @@ export default async function (ctx) {
           : html`<a class="btn btn-sm btn-primary" href="#/test/${a.id}">Davom ettirish</a>`}</td></tr>`)}</tbody></table></div>`
       : empty('bi-clipboard-x', "Hali test topshirmagansiz", "Vakansiyani tanlab, birinchi testingizni boshlang.")}</div>`));
   ctx.root.querySelectorAll('[data-pdf]').forEach((b) => (b.onclick = async () => {
-    try { await api.download(`/candidate/attempts/${b.dataset.pdf}/pdf`, `skillproof-natija-${b.dataset.pdf}.pdf`); toast('PDF yuklab olindi'); } catch (e) { toast(e.message, 'error'); }
+    try { await api.download(`/candidate/attempts/${b.dataset.pdf}/pdf`, `skillprove-natija-${b.dataset.pdf}.pdf`); toast('PDF yuklab olindi'); } catch (e) { toast(e.message, 'error'); }
   }));
 }
 

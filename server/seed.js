@@ -50,7 +50,7 @@ function questions() {
   D('JavaScript', "Quyidagi kod nima chiqaradi va nima uchun xato?", 'for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0);\n}', ["0 1 2 chiqadi", "3 3 3 chiqadi, chunki var funksiya doirasida", "Xato beradi", "Hech narsa chiqmaydi"], 1);
   C('JavaScript', "Promise.all qachon rad etiladi (reject)?", ["Hech qachon", "Birinchi promise rad etilganda", "Barcha promise'lar rad etilganda", "Oxirgi promise rad etilganda"], 1, 'qiyin');
   K('JavaScript', "solve(s) funksiyasini yozing: berilgan satrni teskari aylantirib qaytaring.", "function solve(s) {\n  // kodingizni shu yerda yozing\n  \n}", [
-    { args: ['salom'], expected: 'molas' }, { args: [''], expected: '' }, { args: ['a'], expected: 'a', hidden: true }, { args: ['SkillProof'], expected: 'foorPllikS', hidden: true }], 2);
+    { args: ['salom'], expected: 'molas' }, { args: [''], expected: '' }, { args: ['a'], expected: 'a', hidden: true }, { args: ['SkillProve'], expected: 'evorPllikS', hidden: true }], 2);
   K('JavaScript', "solve(arr) funksiyasini yozing: massivdagi juft sonlar yig'indisini qaytaring.", "function solve(arr) {\n  \n}", [
     { args: [[1, 2, 3, 4]], expected: 6 }, { args: [[]], expected: 0 }, { args: [[7, 9]], expected: 0, hidden: true }, { args: [[2, 4, 6, 8, 10]], expected: 30, hidden: true }], 3);
   K('JavaScript', "solve(nums, target) funksiyasini yozing: yig'indisi target ga teng bo'lgan ikkita element indekslarini [i, j] (i<j) ko'rinishida qaytaring.", "function solve(nums, target) {\n  \n}", [
@@ -151,38 +151,88 @@ function seedCatalog() {
 }
 
 const COMPANIES = [
-  { name: 'Google Developer Team', slug: 'google-developer-team', industry: 'Axborot texnologiyalari', city: 'Toshkent', size: '200+', color: '4285f4',
-    description: "Demo kompaniya: zamonaviy veb va mobil mahsulotlar ustida ishlovchi xalqaro dasturchilar jamoasi. Biz bilimga asoslangan yollashga ishonamiz.", website: 'https://example.com',
+  { name: 'Google Developer Team', slug: 'google-developer-team', industry: 'Axborot texnologiyalari', city: 'Toshkent / Mountain View', size: '100 000+', color: '4285f4',
+    description: "Dunyoning eng yirik texnologik kompaniyasining zamonaviy veb, bulutli va sun'iy intellekt mahsulotlari ustida ishlovchi xalqaro muhandislar jamoasi.", website: 'https://google.com',
     jobs: [
-      { title: 'Frontend Developer', cat: 'Frontend dasturchi', min: 75, dur: 25, salary: '$1500 - $2500', desc: "React asosidagi katta veb-ilovalarni yaratish va qo'llab-quvvatlash.",
-        reqs: { HTML5: 70, CSS3: 75, JavaScript: 80, React: 75 } },
-      { title: 'Backend Developer (Node.js)', cat: 'Backend dasturchi', min: 70, dur: 25, salary: '$1800 - $3000', desc: "Node.js va PostgreSQL asosida masshtablanuvchi REST API'lar yaratish.",
+      { title: 'Frontend Developer (React / TypeScript)', cat: 'Frontend dasturchi', min: 75, dur: 25, salary: '$3500 - $5500', desc: "Yuqori yuklamali global veb-ilovalarni React va TypeScript asosida ishlab chiqish.",
+        reqs: { HTML5: 70, CSS3: 75, JavaScript: 80, React: 75, TypeScript: 70 } },
+      { title: 'Backend Developer (Node.js)', cat: 'Backend dasturchi', min: 70, dur: 25, salary: '$4000 - $6500', desc: "Node.js va PostgreSQL asosida masshtablanuvchi mikroservis va REST API'lar yaratish.",
         reqs: { 'Node.js': 75, SQL: 70, 'REST API': 70, JavaScript: 70 } }] },
-  { name: 'Nova Soft', slug: 'nova-soft', industry: 'Dasturiy ta\'minot ishlab chiqish', city: 'Samarqand', size: '50-100', color: '7c3aed',
+  { name: 'Microsoft', slug: 'microsoft', industry: 'Bulutli xizmatlar va DevOps', city: 'Redmond / Masofaviy', size: '220 000+', color: '00a4ef',
+    description: "Microsoft — Azure bulutli platformasi, Windows, Office 365, GitHub va korporativ dasturiy yechimlar bo'yicha dunyo yetakchisi.", website: 'https://microsoft.com',
+    jobs: [
+      { title: '.NET / C# Backend Engineer', cat: 'Backend dasturchi', min: 75, dur: 30, salary: '$4000 - $6000', desc: "Azure bulutli servislari va korporativ tizimlar uchun yuqori unumdorlikka ega C# / .NET xizmatlarini yaratish.",
+        reqs: { 'C#': 80, SQL: 75, 'REST API': 75 } },
+      { title: 'Cloud DevOps Engineer (Azure / Kubernetes)', cat: 'DevOps muhandisi', min: 75, dur: 30, salary: '$4200 - $6500', desc: "Global bulutli klasterlar, Docker, Kubernetes va CI/CD konveyerlarini avtomatlashtirish.",
+        reqs: { Docker: 75, Kubernetes: 75, Linux: 70, 'CI/CD': 75, Git: 70 } }] },
+  { name: 'Amazon Web Services (AWS)', slug: 'amazon-aws', industry: 'Bulutli xizmatlar va DevOps', city: 'Sietl / Masofaviy', size: '100 000+', color: 'ff9900',
+    description: "Amazon va AWS — dunyodagi eng katta bulutli infratuzilma va elektron tijorat ekotizimi. Yuqori masshtab va ishonchlilik.", website: 'https://aws.amazon.com',
+    jobs: [
+      { title: 'AWS Solutions & DevOps Architect', cat: 'DevOps muhandisi', min: 80, dur: 30, salary: '$4500 - $7000', desc: "AWS (EC2, S3, Lambda), Docker va Kubernetes asosida nosozlikka chidamli arxitektura qurish.",
+        reqs: { AWS: 80, Docker: 75, Kubernetes: 75, Linux: 75, 'CI/CD': 70 } },
+      { title: 'Senior Java Backend Engineer', cat: 'Backend dasturchi', min: 75, dur: 25, salary: '$4000 - $6500', desc: "Sekundiga millionlab so'rovlarni qayta ishlovchi taqsimlangan Java servislarini loyihalash.",
+        reqs: { Java: 80, SQL: 75, 'REST API': 75 } }] },
+  { name: 'Meta (Facebook)', slug: 'meta', industry: 'Dizayn va kreativ', city: 'Menlo Park / London', size: '67 000+', color: '0668E1',
+    description: "Meta — React, React Native va PyTorch texnologiyalarini yaratgan kompaniya. Instagram, WhatsApp va Facebook platformalari muallifi.", website: 'https://meta.com',
+    jobs: [
+      { title: 'Senior React & UI Engineer', cat: 'Frontend dasturchi', min: 80, dur: 25, salary: '$4500 - $7000', desc: "Milliardlab foydalanuvchilar uchun tezkor va zamonaviy React interfeyslarini yaratish.",
+        reqs: { JavaScript: 85, React: 85, TypeScript: 75, CSS3: 75 } },
+      { title: 'React Native Mobile Developer', cat: 'Mobile dasturchi', min: 75, dur: 25, salary: '$4000 - $6000', desc: "iOS va Android uchun kross-platforma mobil ilovalarni yuqori FPS bilan ishlab chiqish.",
+        reqs: { 'React Native': 80, JavaScript: 80, TypeScript: 70 } }] },
+  { name: 'Apple', slug: 'apple', industry: 'Mobil ilovalar', city: 'Kupertino / Masofaviy', size: '160 000+', color: '111827',
+    description: "Apple — iPhone, iPad, Mac va iOS ekotizimi orqali mukammal dizayn hamda yuqori xavfsizlik standartlarini belgilovchi global brend.", website: 'https://apple.com',
+    jobs: [
+      { title: 'iOS Developer (Swift)', cat: 'Mobile dasturchi', min: 80, dur: 25, salary: '$4500 - $7000', desc: "Swift va zamonaviy Apple arxitekturasi yordamida iOS ilovalarini ishlab chiqish.",
+        reqs: { Swift: 85, Git: 70 } },
+      { title: 'Senior Product UI/UX Designer', cat: 'UI/UX dizayner', min: 80, dur: 25, salary: '$4000 - $6200', desc: "Inson va qurilma o'rtasidagi eng qulay, intuitiv interfeys hamda dizayn tizimlarini yaratish.",
+        reqs: { Figma: 80, 'UX Research': 75, Prototyping: 80, 'Design System': 80 } }] },
+  { name: 'EPAM Systems', slug: 'epam-systems', industry: 'Axborot texnologiyalari', city: 'Toshkent / Xalqaro', size: '50 000+', color: '00b5cc',
+    description: "EPAM Systems — Fortune 500 ro'yxatidagi kompaniyalar uchun dasturiy injiniring va raqamli transformatsiya xizmatlarini ko'rsatuvchi global IT gigant.", website: 'https://epam.com',
+    jobs: [
+      { title: 'Full Stack JavaScript Engineer', cat: 'Full Stack dasturchi', min: 70, dur: 30, salary: '$2200 - $3800', desc: "Xalqaro mijozlar uchun React va Node.js asosida end-to-end korporativ tizimlarni yaratish.",
+        reqs: { JavaScript: 75, React: 75, 'Node.js': 75, "Ma'lumotlar bazasi": 70, 'Dasturiy arxitektura': 70 } },
+      { title: 'Java Enterprise Developer', cat: 'Backend dasturchi', min: 70, dur: 25, salary: '$2500 - $4200', desc: "Bank va moliya sektori uchun ishonchli Java hamda PostgreSQL yechimlarini ishlab chiqish.",
+        reqs: { Java: 75, PostgreSQL: 70, SQL: 70, 'REST API': 70 } }] },
+  { name: 'Uzum (Uzum Market & Uzum Bank)', slug: 'uzum', industry: 'Fintech', city: 'Toshkent', size: '10 000+', color: '7000ff',
+    description: "Uzum — O'zbekistonning birinchi 'unicorn' texnologik ekotizimi: Uzum Market, Uzum Bank, Uzum Nasiya va Uzum Tezkor xizmatlarini birlashtiradi.", website: 'https://uzum.com',
+    jobs: [
+      { title: 'Senior Go / Python Backend Developer', cat: 'Backend dasturchi', min: 75, dur: 25, salary: '$2500 - $4500', desc: "Millionlab foydalanuvchilarga xizmat ko'rsatuvchi marketpleys va fintech mikroservislarini yaratish.",
+        reqs: { Python: 75, PostgreSQL: 75, SQL: 75, 'REST API': 75 } },
+      { title: 'Android / Kotlin Developer', cat: 'Mobile dasturchi', min: 75, dur: 25, salary: '$2200 - $3800', desc: "Uzum Market va Uzum Bank Android ilovalarining yangi funksiyalarini Kotlin'da ishlab chiqish.",
+        reqs: { Kotlin: 80, Git: 70 } }] },
+  { name: 'Click', slug: 'click-uz', industry: 'Fintech', city: 'Toshkent', size: '800+', color: '0073ff',
+    description: "Click — O'zbekistondagi yetakchi mobil banking va onlayn to'lov super-ilovasi. 15 milliondan ortiq faol foydalanuvchiga ega.", website: 'https://click.uz',
+    jobs: [
+      { title: 'Flutter Mobile Developer', cat: 'Mobile dasturchi', min: 70, dur: 25, salary: '$1800 - $3200', desc: "Click SuperApp ichidagi mini-ilovalar va yangi moliyaviy xizmatlarni Flutter/Dart'da yaratish.",
+        reqs: { Flutter: 75, Dart: 75, Git: 65 } },
+      { title: 'PHP / Highload Backend Developer', cat: 'Backend dasturchi', min: 70, dur: 25, salary: '$2000 - $3500', desc: "Yuqori tezlikdagi billing va to'lov shlyuzlarini ishlab chiqish hamda optimallashtirish.",
+        reqs: { PHP: 75, SQL: 75, PostgreSQL: 70, 'REST API': 75 } }] },
+  { name: 'Payme (TBC Group)', slug: 'payme', industry: 'Fintech', city: 'Toshkent', size: '600+', color: '00cccc',
+    description: "Payme va TBC Bank — zamonaviy raqamli moliya xizmatlari, lahzalik o'tkazmalar va onlayn kreditlash bo'yicha xalqaro fintech guruhi.", website: 'https://payme.uz',
+    jobs: [
+      { title: 'Node.js & MongoDB Backend Engineer', cat: 'Backend dasturchi', min: 75, dur: 25, salary: '$2200 - $3800', desc: "Payme to'lov ekotizimi uchun xavfsiz, tezkor va uzluksiz ishlovchi Node.js servislarini yozish.",
+        reqs: { 'Node.js': 80, MongoDB: 75, JavaScript: 75, 'REST API': 75 } },
+      { title: 'UI/UX Product Designer', cat: 'UI/UX dizayner', min: 70, dur: 20, salary: '$1500 - $2800', desc: "Moliyaviy ilova foydalanuvchilari uchun sodda va tushunarli interfeyslarni loyihalash.",
+        reqs: { Figma: 75, 'UX Research': 70, Wireframe: 70, 'Design System': 70 } }] },
+  { name: 'Yandex Go Tech', slug: 'yandex-go', industry: 'Mobil ilovalar', city: 'Toshkent / Xalqaro', size: '25 000+', color: 'fc3f1d',
+    description: "Yandex Go — taksi, yetkazib berish, geoservislar va sun'iy intellekt algoritmlari ustida ishlovchi yirik texnologik kompaniya.", website: 'https://yandex.uz',
+    jobs: [
+      { title: 'Frontend Developer (Vue.js / React)', cat: 'Frontend dasturchi', min: 75, dur: 25, salary: '$2500 - $4200', desc: "Geolokatsiya va real-vaqt rejimida ishlovchi murakkab veb-panellarni yaratish.",
+        reqs: { JavaScript: 80, 'Vue.js': 75, React: 70, HTML5: 70, CSS3: 70 } }] },
+  { name: 'Adobe & Figma Studio', slug: 'adobe-figma', industry: 'Dizayn va kreativ', city: 'San-Fransisko / Masofaviy', size: '30 000+', color: 'f24e1e',
+    description: "Adobe va Figma — dunyodagi barcha dizaynerlar, UI/UX mutaxassislari va kreativ jamoalar uchun asosiy dizayn ekotizimi.", website: 'https://figma.com',
+    jobs: [
+      { title: 'Senior Design Systems & UI/UX Architect', cat: 'UI/UX dizayner', min: 75, dur: 25, salary: '$3500 - $5500', desc: "Global dizayn tizimlari, UI komponentlar va interaktiv prototiplarni yaratish.",
+        reqs: { Figma: 80, 'UX Research': 75, Prototyping: 75, 'Design System': 80 } }] },
+  { name: 'Nova Soft', slug: 'nova-soft', industry: 'Axborot texnologiyalari', city: 'Samarqand', size: '50-100', color: '7c3aed',
     description: "Nova Soft — buyurtma asosida dasturiy mahsulotlar yaratuvchi autsorsing kompaniya. Yosh va tashabbuskor jamoa.",
     jobs: [{ title: 'Full Stack Developer', cat: 'Full Stack dasturchi', min: 70, dur: 30, salary: '$1200 - $2200', desc: "Frontend va backend qismlarini yaxlit ishlab chiqish.",
       reqs: { HTML5: 65, JavaScript: 75, React: 65, 'Node.js': 65, "Ma'lumotlar bazasi": 60 } },
     { title: 'Junior Frontend Developer', cat: 'Frontend dasturchi', min: 55, dur: 20, salary: '$500 - $900', desc: "Tajribasiz dasturchilar uchun o'sish imkoniyati.", reqs: { HTML5: 55, CSS3: 55, JavaScript: 55 } }] },
-  { name: 'PayFlow', slug: 'payflow', industry: 'Fintech', city: 'Toshkent', size: '100-200', color: '12b76a',
-    description: "PayFlow — to'lov tizimlari va moliyaviy texnologiyalar yaratuvchi tez rivojlanayotgan kompaniya.",
-    jobs: [{ title: 'Python Backend Developer', cat: 'Backend dasturchi', min: 75, dur: 25, salary: '$2000 - $3500', desc: "To'lov tizimlari uchun xavfsiz va tezkor servislar yaratish.",
-      reqs: { Python: 75, SQL: 75, PostgreSQL: 70, 'REST API': 75 } }] },
-  { name: 'CloudWave', slug: 'cloudwave', industry: 'Bulutli xizmatlar va DevOps', city: 'Toshkent', size: '20-50', color: '0ea5e9',
-    description: "CloudWave — bulutli infratuzilma va avtomatlashtirish bo'yicha mutaxassis jamoa.",
-    jobs: [{ title: 'DevOps Engineer', cat: 'DevOps muhandisi', min: 70, dur: 30, salary: '$2000 - $3500', desc: "CI/CD jarayonlari, Docker va Kubernetes klasterlarini boshqarish.",
-      reqs: { Docker: 75, Kubernetes: 65, Linux: 70, 'CI/CD': 70, Git: 70 } }] },
-  { name: 'Pixel Studio', slug: 'pixel-studio', industry: 'Dizayn va kreativ', city: 'Buxoro', size: '10-20', color: 'f59e0b',
-    description: "Pixel Studio — mahsulot dizayni va foydalanuvchi tajribasi bo'yicha ixtisoslashgan studiya.",
-    jobs: [{ title: 'UI/UX Designer', cat: 'UI/UX dizayner', min: 70, dur: 20, salary: '$900 - $1800', desc: "Veb va mobil ilovalar uchun foydalanuvchi interfeyslarini loyihalash.",
-      reqs: { Figma: 75, 'UX Research': 65, Wireframe: 65, 'Design System': 60 } }] },
-  { name: 'Bazaar Mobile', slug: 'bazaar-mobile', industry: 'Mobil ilovalar', city: 'Namangan', size: '30-60', color: 'ef4444',
-    description: "Bazaar Mobile — onlayn savdo uchun mobil ilovalar yaratadi. Flutter bo'yicha kuchli jamoa.",
-    jobs: [{ title: 'Flutter Developer', cat: 'Mobile dasturchi', min: 70, dur: 25, salary: '$1200 - $2400', desc: "Android va iOS uchun yagona kod bazasida ilovalar yaratish.",
-      reqs: { Flutter: 75, Dart: 70, Git: 60 } }] },
 ];
 
 const CANDIDATES = [
-  ['Aziz', 'Karimov', 0.92], ['Malika', 'Yusupova', 0.85], ['Jasur', 'Toshmatov', 0.7], ['Dilnoza', 'Rahimova', 0.78],
+  ['Aziz', 'Karimov', 0.92], ['Malika', 'Yusupova', 0.85], ['Olima', 'Fazliddinova', 0.9], ['Dilnoza', 'Rahimova', 0.78],
   ['Sardor', 'Aliyev', 0.55], ['Nodira', 'Qodirova', 0.88], ['Bekzod', 'Ismoilov', 0.4], ['Madina', 'Sodiqova', 0.65],
 ];
 
@@ -192,7 +242,7 @@ function seed() {
   tx(() => {
     seedCatalog();
     const adminHash = bcrypt.hashSync('Admin123!', 10), demoHash = bcrypt.hashSync('Demo1234!', 10);
-    run("INSERT INTO users (email, password_hash, role, first_name, last_name) VALUES ('admin@skillproof.uz', ?, 'admin', 'Super', 'Admin')", adminHash);
+    run("INSERT INTO users (email, password_hash, role, first_name, last_name) VALUES ('admin@skillprove.uz', ?, 'admin', 'Super', 'Admin')", adminHash);
     const jobIds = [];
     COMPANIES.forEach((c, i) => {
       const cid = run('INSERT INTO companies (name, slug, industry, city, size, description, website, status) VALUES (?,?,?,?,?,?,?,?)',
@@ -213,7 +263,7 @@ function seed() {
     run("INSERT INTO users (email, password_hash, role, first_name, last_name, phone, city, direction, bio, skills) VALUES ('nomzod@demo.uz', ?, 'candidate', 'Demo', 'Nomzod', '+998901234567', 'Toshkent', 'Frontend dasturchi', 'Frontend yo''nalishida o''sishni xohlovchi dasturchi.', 'HTML5, CSS3, JavaScript')", demoHash);
     CANDIDATES.forEach(([f, l, skill], i) => {
       const uid = run("INSERT INTO users (email, password_hash, role, first_name, last_name, phone, city, direction) VALUES (?,?,'candidate',?,?,?,?,?)",
-        `${f.toLowerCase()}@demo.uz`, demoHash, f, l, `+99890${1000000 + i * 1111}`, 'Toshkent', 'Frontend dasturchi').id;
+        f === 'Olima' ? 'olimaxon890@gmail.com' : `${f.toLowerCase()}@demo.uz`, demoHash, f, l, `+99890${1000000 + i * 1111}`, 'Toshkent', 'Frontend dasturchi').id;
       // Demo natijalar: Frontend va Backend lavozimlariga topshirilgan testlar
       [jobIds[0], jobIds[1]].forEach((jid, k) => {
         if (k === 1 && i % 2) return;
@@ -239,7 +289,7 @@ if (require.main === module) {
   if (process.argv.includes('--reset')) {
     ['activity', 'answers', 'attempts', 'questions', 'job_requirements', 'jobs', 'users', 'companies', 'technologies', 'categories']
       .forEach((t) => db.exec(`DELETE FROM ${t}`));
-    db.exec("DELETE FROM sqlite_sequence");
+    try { db.exec("DELETE FROM sqlite_sequence"); } catch {}
   }
   seed();
 }

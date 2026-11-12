@@ -8,12 +8,12 @@ const t = (s) => String(s ?? '').replace(/[ʻʼ’‘`´]/g, "'").replace(/[^\x0
 function attemptPdf(res, { attempt, job, company, user, techScores, strengths, weaknesses, recommendations }) {
   const doc = new PDFDocument({ size: 'A4', margin: 48 });
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="skillproof-natija-${attempt.id}.pdf"`);
+  res.setHeader('Content-Disposition', `attachment; filename="skillprove-natija-${attempt.id}.pdf"`);
   doc.pipe(res);
   const navy = '#14235c', violet = '#6d3cf0', gray = '#667085';
 
   doc.rect(0, 0, 595, 110).fill(navy);
-  doc.fillColor('#fff').fontSize(24).font('Helvetica-Bold').text('SkillProof', 48, 34);
+  doc.fillColor('#fff').fontSize(24).font('Helvetica-Bold').text('SkillProve', 48, 34);
   doc.fontSize(11).font('Helvetica').text('Bilim tekshiruvi natijalari hisoboti', 48, 66);
   doc.fontSize(10).text(new Date(attempt.finished_at || Date.now()).toLocaleString('uz-UZ'), 400, 40, { width: 147, align: 'right' });
 

@@ -7,7 +7,7 @@ export default async function (ctx) {
   const login = ctx.opts.mode === 'login';
   const role = ctx.query.role === 'company' ? 'company' : 'candidate';
   ctx.render(html`<div class="auth-wrap page-enter">
-    <div class="auth-art"><h2>${login ? 'Qaytganingiz bilan!' : "SkillProof'ga xush kelibsiz"}</h2><p class="opacity-75 mb-4">Haqiqiy bilimga asoslangan yollash platformasi.</p>
+    <div class="auth-art"><h2>${login ? 'Qaytganingiz bilan!' : "SkillProve'ga xush kelibsiz"}</h2><p class="opacity-75 mb-4">Haqiqiy bilimga asoslangan yollash platformasi.</p>
       <ul class="list-unstyled"><li><i class="bi bi-check-circle-fill me-2"></i>0–100 ballik aniq baholash</li><li><i class="bi bi-check-circle-fill me-2"></i>Xavfsiz kod tekshirish sandbox'i</li>
         <li><i class="bi bi-check-circle-fill me-2"></i>Kompaniya talablariga moslik tahlili</li><li><i class="bi bi-check-circle-fill me-2"></i>PDF natijalar va testlar tarixi</li></ul></div>
     <div class="auth-form"><div class="box"><h2 class="mb-1">${login ? 'Tizimga kirish' : "Ro'yxatdan o'tish"}</h2>
@@ -25,7 +25,7 @@ export default async function (ctx) {
         <button class="btn btn-primary w-100 btn-lg mt-2" type="submit">${login ? 'Kirish' : "Ro'yxatdan o'tish"}</button></form>
       <p class="text-center mt-4 text-muted">${login ? html`Hisobingiz yo'qmi? <a href="#/register">Ro'yxatdan o'ting</a>` : html`Hisobingiz bormi? <a href="#/login">Kirish</a>`}</p>
       ${login ? html`<div class="card-sp card-pad mt-3 small"><b class="d-block mb-2">Demo hisoblar (parol bilan to'ldirish):</b>
-        <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-light-soft" data-demo="nomzod@demo.uz|Demo1234!">Nomzod</button><button class="btn btn-sm btn-light-soft" data-demo="hr@google-dev.uz|Demo1234!">Kompaniya</button><button class="btn btn-sm btn-light-soft" data-demo="admin@skillproof.uz|Admin123!">Super Admin</button></div></div>` : ''}
+        <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-light-soft" data-demo="nomzod@demo.uz|Demo1234!">Nomzod</button><button class="btn btn-sm btn-light-soft" data-demo="hr@google-dev.uz|Demo1234!">Kompaniya</button><button class="btn btn-sm btn-light-soft" data-demo="admin@skillprove.uz|Admin123!">Super Admin</button></div></div>` : ''}
     </div></div></div>`);
   const f = ctx.root.querySelector('#f'), err = ctx.root.querySelector('#err');
   ctx.root.querySelector('#eye').onclick = () => { const i = f.password; i.type = i.type === 'password' ? 'text' : 'password'; };

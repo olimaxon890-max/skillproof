@@ -1,19 +1,21 @@
-// SkillProof dizayn tizimi: Bootstrap 5 o'zgaruvchilarini moslashtirish
+// SkillProve dizayn tizimi: Yorqin va quvnoq SaaS ranglar palitrasi
 @use "sass:color";
 
-$navy: #14235c;
+$navy: #252b69;
 $violet: #7c3aed;
-$success-c: #12b76a;
-$warning-c: #f5a524;
-$danger-c: #e5484d;
-$ink: #101828;
-$muted: #667085;
-$line: #e6e9f2;
-$bg: #f6f7fb;
+$accent: #ec4899;
+$cyan: #06b6d4;
+$success-c: #10b981;
+$warning-c: #f59e0b;
+$danger-c: #f43f5e;
+$ink: #1e1b4b;
+$muted: #64748b;
+$line: #e2e8f0;
+$bg: #f8faff;
 
-$radius: 16px;
-$shadow-sm: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
-$shadow-md: 0 8px 24px rgba(20, 35, 92, .10);
-$shadow-lg: 0 20px 48px rgba(20, 35, 92, .16);
-$gradient: linear-gradient(135deg, $navy 0%, #3b2fa8 55%, $violet 100%);
-
+$radius: 20px;
+$shadow-sm: 0 4px 14px rgba(99, 102, 241, .07), 0 1px 3px rgba(15, 23, 42, .04);
+$shadow-md: 0 14px 32px rgba(124, 58, 237, .15);
+$shadow-lg: 0 24px 54px rgba(124, 58, 237, .24);
+$gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 48%, #db2777 100%);
+$gradient-soft: linear-gradient(135deg, rgba(79, 70, 229, .08) 0%, rgba(236, 72, 153, .08) 100%);

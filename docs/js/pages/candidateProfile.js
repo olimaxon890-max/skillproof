@@ -6,6 +6,9 @@ export default async function (ctx) {
   ctx.render(dash('candidate', html`${pageHead('Mening profilim')}${skeletonCards(2, 'col-md-6')}`));
   const [p, cats] = await Promise.all([api.get('/candidate/profile'), api.get('/public/categories')]).catch((e) => { toast(e.message, 'error'); return []; });
   if (!p || !ctx.isCurrent()) return;
+  if (session.user && session.user.email !== p.email) {
+    session.set(session.token, { ...session.user, email: p.email, first_name: p.first_name, last_name: p.last_name });
+  }
   ctx.render(dash('candidate', html`${pageHead('Mening profilim', "Shaxsiy ma'lumotlar va yo'nalishingiz")}
     <form id="f" class="row g-4"><div class="col-lg-4"><div class="card-sp card-pad text-center"><div class="avatar mx-auto mb-3" style="width:88px;height:88px;font-size:1.8rem">${((p.first_name || '?')[0] + (p.last_name?.[0] || '')).toUpperCase()}</div>
       <h4 class="mb-0">${p.first_name} ${p.last_name}</h4><div class="text-muted small mb-3">${p.email}</div><span class="chip chip-violet">${p.direction || "Yo'nalish tanlanmagan"}</span>

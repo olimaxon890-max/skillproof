@@ -1,7 +1,8 @@
-// SkillProof loyihasini bevosita GitHub API orqali repozitoriyga yuklash va
-// GitHub Pages (*.github.io) bepul domenini avtomatik yoqish skripti
+// SkillProve loyihasini bevosita GitHub API orqali repozitoriyga yuklash va
+// GitHub Pages (skillprove.uz) domenini avtomatik yoqish skripti
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 const root = path.join(__dirname, '..');
 const IGNORE = new Set(['node_modules', 'data', '.git', '.env', 'docs', 'vendor', '.github']);
@@ -18,21 +19,51 @@ function walk(dir, base = '') {
   return out;
 }
 
-async function gh(token, method, url, body) {
-  const res = await fetch(`https://api.github.com${url}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'SkillProof-Deployer',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
+function ghOnce(token, method, urlPath, body) {
+  return new Promise((resolve, reject) => {
+    const payload = body ? Buffer.from(JSON.stringify(body), 'utf8') : null;
+    const req = https.request(
+      {
+        hostname: 'api.github.com',
+        port: 443,
+        path: urlPath,
+        method,
+        family: 4,
+        timeout: 30000,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'SkillProve-Deployer',
+          ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': payload.length } : {}),
+        },
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8');
+          let data = {};
+          try { data = JSON.parse(text); } catch {}
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data });
+        });
+      }
+    );
+    req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error('Request timeout')));
+    if (payload) req.write(payload);
+    req.end();
   });
-  const text = await res.text();
-  let data = {};
-  try { data = JSON.parse(text); } catch {}
-  return { ok: res.ok, status: res.status, data };
+}
+
+async function gh(token, method, urlPath, body) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await ghOnce(token, method, urlPath, body);
+    } catch (e) {
+      if (attempt === 3) throw e;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
 }
 
 async function main() {
@@ -52,6 +83,7 @@ async function main() {
     .replace('vendor/chartjs/chart.umd.js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js');
   fs.writeFileSync(path.join(docsDir, 'index.html'), idx);
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '');
+  fs.writeFileSync(path.join(docsDir, 'CNAME'), 'skillprove.uz\n');
 
   const me = await gh(token, 'GET', '/user');
   if (!me.ok) { console.error('Xato:', me.data.message); process.exit(1); }
@@ -62,8 +94,8 @@ async function main() {
   if (!repo.ok) {
     repo = await gh(token, 'POST', '/user/repos', {
       name: repoName,
-      description: 'SkillProof — Zamonaviy bilimni tekshirish va ishga qabul qilish platformasi',
-      homepage: `https://${owner}.github.io/${repoName}/`,
+      description: 'SkillProve — Zamonaviy bilimni tekshirish va ishga qabul qilish platformasi',
+      homepage: 'https://skillprove.uz',
       private: false,
       auto_init: true,
     });
@@ -78,9 +110,9 @@ async function main() {
   console.log(`→ ${files.length} ta fayl parallel yuklanmoqda...`);
 
   const tree = [];
-  // 10 tadan parallel yuklash
-  for (let i = 0; i < files.length; i += 10) {
-    const batch = files.slice(i, i + 10);
+  // 8 tadan parallel yuklash
+  for (let i = 0; i < files.length; i += 8) {
+    const batch = files.slice(i, i + 8);
     const res = await Promise.all(
       batch.map(async (f) => {
         const content = fs.readFileSync(f.full).toString('base64');
@@ -94,7 +126,7 @@ async function main() {
 
   const newTree = await gh(token, 'POST', `/repos/${owner}/${repoName}/git/trees`, { tree });
   const commit = await gh(token, 'POST', `/repos/${owner}/${repoName}/git/commits`, {
-    message: 'Deploy SkillProof full-stack platform & GitHub Pages',
+    message: 'Deploy SkillProve platform & connect skillprove.uz custom domain',
     tree: newTree.data.sha,
     parents: baseSha ? [baseSha] : [],
   });
@@ -104,18 +136,21 @@ async function main() {
   });
 
   const pg = await gh(token, 'POST', `/repos/${owner}/${repoName}/pages`, {
+    cname: 'skillprove.uz',
     source: { branch, path: '/docs' },
   });
   if (!pg.ok && pg.status === 409) {
-    await gh(token, 'PUT', `/repos/${owner}/${repoName}/pages`, {
+    const putRes = await gh(token, 'PUT', `/repos/${owner}/${repoName}/pages`, {
+      cname: 'skillprove.uz',
       source: { branch, path: '/docs' },
     });
+    console.log('Pages PUT status:', putRes.status, putRes.data);
   }
 
   console.log('\n============================================================');
   console.log('🎉 MUVAFFAQIYATLI YUKLANDI!');
   console.log(`📦 GitHub Repozitoriy: https://github.com/${owner}/${repoName}`);
-  console.log(`🌐 Bepul Sayt Silkasi (Domen): https://${owner}.github.io/${repoName}/`);
+  console.log(`🌐 Rasmiy Sayt Domeni: http://skillprove.uz`);
   console.log('============================================================\n');
 }
 

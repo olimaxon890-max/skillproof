@@ -20,6 +20,6 @@ export default async function (ctx) {
         <td class="text-end">${q.score >= 0.6 ? html`<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> To'g'ri</span>` : q.score > 0 ? html`<span class="text-warning fw-bold"><i class="bi bi-dash-circle-fill"></i> Qisman (${Math.round(q.score * 100)}%)</span>` : html`<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Noto'g'ri</span>`}</td></tr>`)}</tbody></table></div>
       <div class="small text-muted mt-3"><i class="bi bi-shield-lock me-1"></i>Test savollarining to'g'ri javoblari himoya maqsadida ko'rsatilmaydi.</div></div></div>`);
   afterResult(ctx.root, r);
-  ctx.root.querySelector('#pdf').onclick = async () => { try { await api.download(`/candidate/attempts/${r.id}/pdf`, `skillproof-natija-${r.id}.pdf`); toast('PDF yuklab olindi'); } catch (e) { toast(e.message, 'error'); } };
+  ctx.root.querySelector('#pdf').onclick = async () => { try { await api.download(`/candidate/attempts/${r.id}/pdf`, `skillprove-natija-${r.id}.pdf`); toast('PDF yuklab olindi'); } catch (e) { toast(e.message, 'error'); } };
 }
 

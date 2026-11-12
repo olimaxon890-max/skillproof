@@ -1,4 +1,4 @@
-// SkillProof server kirish nuqtasi
+// SkillProve server kirish nuqtasi
 const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
@@ -42,7 +42,7 @@ if (!get('SELECT id FROM users LIMIT 1')) require('./seed').seed();
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`SkillProof ishga tushdi: http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`SkillProve ishga tushdi: http://localhost:${PORT}`));
 }
 module.exports = app;
 

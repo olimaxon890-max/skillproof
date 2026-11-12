@@ -1,17 +1,17 @@
-# SkillProof — Zamonaviy bilimni tekshirish va ishga qabul qilish platformasi
+# SkillProve — Zamonaviy bilimni tekshirish va ishga qabul qilish platformasi
 
-**SkillProof** — bu nomzodlarning CV/Resume'dagi so'zlariga emas, balki haqiqiy amaliy va nazariy bilimlariga asoslanib baholovchi ko'p kompaniyali (**Multi-Tenant**) SaaS platformasi. Saytning barcha interfeyslari, test savollari, baholash xulosalari va hisobotlari to'liq **o'zbek tilida** ishlab chiqilgan.
+**SkillProve** — bu nomzodlarning CV/Resume'dagi so'zlariga emas, balki haqiqiy amaliy va nazariy bilimlariga asoslanib baholovchi ko'p kompaniyali (**Multi-Tenant**) SaaS platformasi. Saytning barcha interfeyslari, test savollari, baholash xulosalari va hisobotlari to'liq **o'zbek tilida** ishlab chiqilgan.
 
 ---
 
 ## 1. Loyiha arxitekturasi va papkalar strukturasi
 
 ```
-skillproof/
+skillprove/
 ├── package.json                 # Loyiha konfiguratsiyasi va skriptlar
 ├── README.md                    # Qo'llanma va hujjatlar
 ├── data/
-│   └── skillproof.db            # SQLite ma'lumotlar bazasi (avtomatik yaratiladi)
+│   └── skillprove.db            # SQLite ma'lumotlar bazasi (avtomatik yaratiladi)
 ├── server/
 │   ├── index.js                 # Express server, xavfsizlik (Helmet, Rate-Limit) va statik marshrutlar
 │   ├── db.js                    # SQLite (node:sqlite) jadvallari va tranzaksiya yordamchilari
@@ -50,7 +50,7 @@ skillproof/
         │   ├── codeEditor.js    # Maxsus Code Editor (qator raqamlari, Tab, Ctrl+Enter, konsol)
         │   └── resultView.js    # 0–100 natija, radar diagramma, kuchli/zaif tomonlar
         └── pages/
-            ├── home.js          # Bosh sahifa (Hero, Qanday ishlaydi, Nega SkillProof, FAQ va b.)
+            ├── home.js          # Bosh sahifa (Hero, Qanday ishlaydi, Nega SkillProve, FAQ va b.)
             ├── companies.js     # Kompaniyalar ro'yxati va qidiruv
             ├── companyDetail.js # Kompaniya haqida batafsil sahifa
             ├── jobs.js          # Ish o'rinlari sahifasi va filtrlar
@@ -86,7 +86,7 @@ skillproof/
 
 ```bash
 # 1. Loyiha papkasiga o'tish
-cd skillproof
+cd skillprove
 
 # 2. Paketlarni o'rnatish
 npm install
@@ -115,7 +115,7 @@ Server ishga tushgach brauzerda oching: **http://localhost:3000**
 | **Ish izlovchi (Nomzod)** | `nomzod@demo.uz` | `Demo1234!` | Kompaniya va lavozim tanlash, test va kod topshirish, 0–100 tahlil, PDF yuklab olish |
 | **Kompaniya (Google Developer Team)** | `hr@google-dev.uz` | `Demo1234!` | Vakansiya va minimal ball belgilash, savollar qo'shish, nomzodlarni solishtirish, qabul/rad etish |
 | **Kompaniya (Nova Soft)** | `hr@nova-soft.uz` | `Demo1234!` | Multi-tenant izolyatsiyasini tekshirish uchun ikkinchi mustaqil kompaniya |
-| **Super Admin** | `admin@skillproof.uz` | `Admin123!` | Kompaniyalarni tasdiqlash/bloklash, foydalanuvchilar, kasb va texnologiyalar katalogi |
+| **Super Admin** | `admin@skillprove.uz` | `Admin123!` | Kompaniyalarni tasdiqlash/bloklash, foydalanuvchilar, kasb va texnologiyalar katalogi |
 
 ---
 

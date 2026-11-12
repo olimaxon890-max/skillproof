@@ -31,9 +31,9 @@ const ok = (c, m) => { console.log((c ? '  OK   ' : '  XATO ') + m); if (!c) fai
   r = await sandbox.runTests({ code: 'console.log("salom"); 1+1', tests: [{ args: [], expected: null, play: true }] });
   ok(r.play && r.logs[0] === 'salom', 'Playground: console.log chiqishi qaytadi');
 
-  const admin = await login('admin@skillproof.uz', 'Admin123!');
+  const admin = await login('admin@skillprove.uz', 'Admin123!');
   ok(!!admin, 'Admin login');
-  ok((await login('admin@skillproof.uz', 'xato')) === undefined, "Noto'g'ri parol rad etiladi");
+  ok((await login('admin@skillprove.uz', 'xato')) === undefined, "Noto'g'ri parol rad etiladi");
   ok((await call('GET', '/admin/stats')).status === 401, 'Tokensiz admin API yopiq');
 
   // Ro'yxatdan o'tish
@@ -61,7 +61,7 @@ const ok = (c, m) => { console.log((c ? '  OK   ' : '  XATO ') + m); if (!c) fai
   ok(!cands2.some((c) => cands1.find((x) => x.id === c.id)), 'Nomzodlar ro\'yxati tenant bo\'yicha ajratilgan');
 
   // Test topshirish
-  const job = (await call('GET', '/public/jobs')).data.find((j) => j.title === 'Frontend Developer');
+  const job = (await call('GET', '/public/jobs')).data.find((j) => j.title.startsWith('Frontend Developer'));
   r = await call('POST', '/candidate/attempts', { job_id: job.id }, cand);
   ok(r.status === 201 || r.status === 200, 'Test boshlandi');
   const aid = r.data.id;

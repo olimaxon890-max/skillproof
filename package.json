@@ -1,8 +1,8 @@
 {
-  "name": "skillproof",
+  "name": "skillprove",
   "version": "1.0.0",
   "private": true,
-  "description": "SkillProof - bilimni tekshirish va ishga qabul qilish platformasi",
+  "description": "SkillProve - bilimni tekshirish va ishga qabul qilish platformasi",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

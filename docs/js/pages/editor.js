@@ -12,7 +12,7 @@ console.log("Yig'indi:", yigindi);
 console.log("Eng katta:", Math.max(...sonlar));
 `,
   python: `# Python faqat Docker sandbox yoqilganda ishlaydi
-print("Salom, SkillProof!")
+print("Salom, SkillProve!")
 `,
 };
 

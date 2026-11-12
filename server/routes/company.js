@@ -155,7 +155,7 @@ router.get('/candidates.csv', wrap((req, res) => {
   const lines = rows.map((r) => [r.first_name, r.last_name, r.email, r.phone, r.job_title, Math.round(r.total_score), r.correct, r.wrong, r.practical_score ?? '',
   r.tech_scores.map((t) => `${t.name}:${t.score}`).join('; '), r.verdict_label, dec[r.decision], r.human_score ?? '', r.finished_at].map(esc).join(','));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="skillproof-nomzodlar.csv"');
+  res.setHeader('Content-Disposition', 'attachment; filename="skillprove-nomzodlar.csv"');
   res.send('\uFEFF' + [head.map(esc).join(','), ...lines].join('\r\n'));
 }));
 

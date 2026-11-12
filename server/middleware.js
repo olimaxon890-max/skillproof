@@ -2,8 +2,8 @@
 const jwt = require('jsonwebtoken');
 const { get } = require('./db');
 
-const SECRET = process.env.JWT_SECRET || 'skillproof-dev-secret-ozgartiring';
-const sign = (user) => jwt.sign({ id: user.id, role: user.role }, SECRET, { expiresIn: '7d' });
+const SECRET = process.env.JWT_SECRET || 'skillprove-dev-secret-ozgartiring';
+const sign = (user) => jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: '7d' });
 
 function auth(req, res, next) {
   const h = req.headers.authorization || '';
@@ -11,8 +11,10 @@ function auth(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Tizimga kirish talab etiladi' });
   try {
     const p = jwt.verify(token, SECRET);
-    // Har bir so'rovda foydalanuvchi holati bazadan tekshiriladi (bloklangan bo'lsa kirish yopiladi)
-    const u = get('SELECT id, email, role, status, company_id, first_name, last_name FROM users WHERE id=?', p.id);
+    // Har bir so'rovda foydalanuvchi holati bazadan tekshiriladi (email ham mos kelishi shart)
+    const u = p.email
+      ? get('SELECT id, email, role, status, company_id, first_name, last_name FROM users WHERE id=? AND email=?', p.id, p.email)
+      : get('SELECT id, email, role, status, company_id, first_name, last_name FROM users WHERE id=?', p.id);
     if (!u) return res.status(401).json({ error: 'Foydalanuvchi topilmadi' });
     if (u.status === 'blocked') return res.status(403).json({ error: 'Hisobingiz bloklangan' });
     req.user = u;
