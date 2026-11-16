@@ -172,7 +172,16 @@ export async function handleMock(method, rawPath, body, currentUser) {
     return { token: 'mock-jwt-' + found.id, user: found };
   }
   if (method === 'POST' && path === '/auth/register') {
-    if (db.users.some((x) => x.email.toLowerCase() === String(body.email || '').toLowerCase())) throw new Error("Bu email allaqachon ro'yxatdan o'tgan");
+    const rawEmail = String(body.email || '').trim().toLowerCase();
+    const mEmail = rawEmail.match(/^([a-z0-9._+-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
+    if (!mEmail) throw new Error("Elektron pochta manzili noto'g'ri kiritilgan.");
+    const [, localPart, domainPart] = mEmail;
+    const tempRe = /(temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
+    const allowedDomains = new Set(['gmail.com', 'googlemail.com', 'icloud.com', 'me.com', 'mac.com', 'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'internet.ru', 'yandex.ru', 'yandex.uz', 'yandex.com', 'ya.ru', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com', 'yahoo.com', 'ymail.com', 'proton.me', 'protonmail.com', 'zoho.com', 'umail.uz']);
+    if (localPart.length < 3 || tempRe.test(domainPart) || (!allowedDomains.has(domainPart) && !domainPart.endsWith('.uz') && !domainPart.endsWith('.edu'))) {
+      throw new Error("Vaqtinchalik (Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan! Faqat doimiy shaxsiy pochtangizni kiriting (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki .uz).");
+    }
+    if (db.users.some((x) => x.email.toLowerCase() === rawEmail)) throw new Error("Bu email allaqachon ro'yxatdan o'tgan");
     let cid = null;
     if (body.role === 'company') {
       cid = Math.max(0, ...db.companies.map((c) => c.id)) + 1;
@@ -312,15 +321,17 @@ export async function handleMock(method, rawPath, body, currentUser) {
       const required = reqMap[name] ?? null;
       return { name, score, required, met: required == null ? null : score >= required };
     });
-    const total = max ? Math.round((sum / max) * 100) : 0;
+    const total = body?.cheated ? 0 : (max ? Math.round((sum / max) * 100) : 0);
     const unmet = tech_scores.filter((t) => t.required != null && !t.met);
-    const verdict = !unmet.length && total >= job.min_score ? 'full' : total >= job.min_score ? 'interview' : total >= 50 ? 'review' : 'no';
+    const verdict = body?.cheated ? 'no' : (!unmet.length && total >= job.min_score ? 'full' : total >= job.min_score ? 'interview' : total >= 50 ? 'review' : 'no');
     Object.assign(a, {
-      status: 'done', finished_at: new Date().toISOString(), total_score: total, tech_scores, correct, wrong, practical_score: 100, verdict,
-      summary: verdict === 'full' ? `Nomzod kompaniyaning barcha talablariga to'liq javob beradi (${total}/100).` : `Umumiy natija ${total}/100. ${unmet.length ? unmet.map((x) => x.name).join(', ') + " bo'yicha bilimni oshirish tavsiya etiladi." : ''}`,
-      strengths: tech_scores.filter((t) => t.score >= 75).map((t) => `${t.name} bo'yicha yuqori natija (${t.score} ball)`),
-      weaknesses: unmet.map((t) => `${t.name}: ${t.score} ball (talab ${t.required})`),
-      recommendations: unmet.map((t) => `${t.name} bo'yicha bilimingizni rivojlantirish tavsiya etiladi`),
+      status: 'done', finished_at: new Date().toISOString(), total_score: total, tech_scores: body?.cheated ? tech_scores.map((t) => ({ ...t, score: 0, met: false })) : tech_scores, correct: body?.cheated ? 0 : correct, wrong: body?.cheated ? qs.length : wrong, practical_score: body?.cheated ? 0 : 100, verdict,
+      summary: body?.cheated
+        ? `🚫 TEST BLOKLANDI (CHSB / Anti-Cheat): ${body.reason || "Nomzod imtihon vaqtida boshqa oynaga yoki sahifaga o'tgani sababli test qoidabuzarlik sifatida avtomatik bloklandi (0/100 ball)."}`
+        : (verdict === 'full' ? `Nomzod kompaniyaning barcha talablariga to'liq javob beradi (${total}/100).` : `Umumiy natija ${total}/100. ${unmet.length ? unmet.map((x) => x.name).join(', ') + " bo'yicha bilimni oshirish tavsiya etiladi." : ''}`),
+      strengths: body?.cheated ? [] : tech_scores.filter((t) => t.score >= 75).map((t) => `${t.name} bo'yicha yuqori natija (${t.score} ball)`),
+      weaknesses: body?.cheated ? ["Imtihon qoidasi buzildi: Test vaqtida boshqa oynaga/sahifaga chiqish aniqlandi"] : unmet.map((t) => `${t.name}: ${t.score} ball (talab ${t.required})`),
+      recommendations: body?.cheated ? ["Imtihonni CHSB qoidalariga rioya qilgan holda, boshqa oynalarga o'tmasdan qayta topshiring"] : unmet.map((t) => `${t.name} bo'yicha bilimingizni rivojlantirish tavsiya etiladi`),
     });
     saveDb(db);
     return { ok: true, id: a.id };

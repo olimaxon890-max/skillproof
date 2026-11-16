@@ -103,10 +103,24 @@ function own(req, res) {
   return a;
 }
 
-function finish(id) {
+function finish(id, cheatReason = null) {
   const a = get('SELECT * FROM attempts WHERE id=?', id);
   if (a.status === 'done') return a;
   const r = evaluateAttempt(id);
+  if (cheatReason) {
+    const zeroTechs = (r.techScores || []).map((t) => ({ ...t, score: 0, met: false }));
+    run(`UPDATE attempts SET status='done', finished_at=?, total_score=0, tech_scores=?, correct=0, wrong=?, practical_score=0, verdict='no', summary=?,
+      strengths='[]', weaknesses=?, recommendations=? WHERE id=?`,
+      new Date().toISOString(),
+      JSON.stringify(zeroTechs),
+      (r.correct || 0) + (r.wrong || 0),
+      `🚫 TEST BLOKLANDI (CHSB / Anti-Cheat): ${cheatReason}`,
+      JSON.stringify(["Imtihon qoidasi buzildi: Test vaqtida boshqa oynaga/sahifaga o'tish aniqlandi"]),
+      JSON.stringify(["Imtihonni CHSB qoidalariga rioya qilgan holda, boshqa oynalarga o'tmasdan qayta topshiring"]),
+      id
+    );
+    return get('SELECT * FROM attempts WHERE id=?', id);
+  }
   run(`UPDATE attempts SET status='done', finished_at=?, total_score=?, tech_scores=?, correct=?, wrong=?, practical_score=?, verdict=?, summary=?,
     strengths=?, weaknesses=?, recommendations=? WHERE id=?`, new Date().toISOString(), r.total, JSON.stringify(r.techScores), r.correct, r.wrong, r.practical,
     r.verdict, r.summary, JSON.stringify(r.strengths), JSON.stringify(r.weaknesses), JSON.stringify(r.recommendations), id);
@@ -185,8 +199,9 @@ router.post('/attempts/:id/submit-code', wrap(async (req, res) => {
 
 router.post('/attempts/:id/finish', wrap((req, res) => {
   const a = own(req, res); if (!a) return;
-  finish(a.id);
-  log(req.user.id, 'test_finish', `Test #${a.id}`);
+  const cheatReason = req.body?.cheated ? (req.body.reason || "Imtihon vaqtida boshqa oynaga/sahifaga o'tish aniqlandi") : null;
+  finish(a.id, cheatReason);
+  log(req.user.id, cheatReason ? 'test_blocked_anticheat' : 'test_finish', `Test #${a.id}${cheatReason ? ' (BLOKLANDI)' : ''}`);
   res.json({ ok: true, id: a.id });
 }));
 
