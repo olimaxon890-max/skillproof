@@ -17,7 +17,7 @@ export default async function (ctx) {
   const answered = (q) => q.response != null && String(q.response).trim() !== '';
 
   ctx.render(html`
-    <!-- CHSB Start Gate Overlay -->
+    <!-- Anti-Cheat Start Gate Overlay -->
     <div id="chsb-gate" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 60%,#311042 100%);color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;">
       <div style="max-width:580px;width:100%;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.2);border-radius:24px;padding:32px;backdrop-filter:blur(16px);box-shadow:0 24px 60px rgba(0,0,0,0.45);">
         <div class="d-flex align-items-center gap-3 mb-3">
@@ -25,28 +25,28 @@ export default async function (ctx) {
             <i class="bi bi-shield-lock-fill"></i>
           </div>
           <div>
-            <span class="badge bg-danger mb-1">CHSB ANTI-CHEAT REJIMI</span>
-            <h3 class="mb-0 text-white fw-bold">Himoyalangan Imtihon Tizimi</h3>
+            <span class="badge bg-danger mb-1">SKILLPROVE ANTI-CHEAT</span>
+            <h3 class="mb-0 text-white fw-bold">Xavfsiz Imtihon Rejimi</h3>
           </div>
         </div>
         <p class="text-white-50 small mb-3">
-          Ushbu sinov umumta'lim CHSB va xalqaro proktoring standartlari asosida qat'iy nazorat ostida o'tkaziladi:
+          Nomzodlar bilimini halol va shaffof baholash maqsadida sinov maxsus himoya nazorati ostida o'tkaziladi:
         </p>
         <ul class="list-unstyled small mb-4" style="line-height:1.75;color:#e2e8f0;">
           <li class="mb-2"><i class="bi bi-fullscreen text-warning me-2"></i><b>1. To'liq ekran (Fullscreen):</b> Test boshlanganda ekran to'liq qulflanadi.</li>
           <li class="mb-2"><i class="bi bi-slash-circle text-danger me-2"></i><b>2. Nusxalash taqiqlangan:</b> Savollarni belgilash, nusxalash (Copy) va o'ng tugmani bosish bloklangan.</li>
-          <li class="mb-2"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i><b>3. Boshqa joyga o'tish = Avtomatik Bloklash:</b> Agar test vaqtida boshqa brauzer oynasiga, tabga, Telegram/Google'ga o'tsangiz yoki to'liq ekrandan chiqsangiz — <b>TEST DARHOL BLOKLANADI va 0 ball bilan yakunlanadi!</b></li>
+          <li class="mb-2"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i><b>3. Boshqa joyga o'tish = Avtomatik Bloklash:</b> Agar test vaqtida boshqa brauzer oynasiga, tabga, ilovaga o'tsangiz yoki to'liq ekrandan chiqsangiz — <b>TEST DARHOL BLOKLANADI va 0 ball bilan yakunlanadi!</b></li>
         </ul>
         <div class="d-flex gap-2">
           <button class="btn btn-danger btn-lg flex-grow-1 fw-bold" id="start-chsb">
-            <i class="bi bi-shield-check me-2"></i>Tushundim, To'liq Ekranda Boshlash
+            <i class="bi bi-shield-check me-2"></i>Tushundim, Testni Boshlash
           </button>
           <a href="#/candidate" class="btn btn-outline-light btn-lg">Orqaga</a>
         </div>
       </div>
     </div>
 
-    <!-- CHSB Blocked Lock Screen (Hidden until violation) -->
+    <!-- Anti-Cheat Blocked Lock Screen (Hidden until violation) -->
     <div id="chsb-locked" class="d-none" style="position:fixed;inset:0;z-index:10000;background:linear-gradient(135deg,#450a0a 0%,#7f1d1d 50%,#1e1b4b 100%);color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;">
       <div style="max-width:540px;width:100%;background:rgba(0,0,0,0.45);border:2px solid #f43f5e;border-radius:24px;padding:36px;">
         <div style="font-size:64px;color:#fb7185;line-height:1;" class="mb-3"><i class="bi bi-shield-x"></i></div>
@@ -56,7 +56,7 @@ export default async function (ctx) {
           Siz imtihon vaqtida test oynasidan chiqdingiz (boshqa sahifa yoki dasturga o'tish aniqlandi).
         </p>
         <div class="alert alert-danger bg-danger bg-opacity-25 border-danger text-white small mb-4">
-          CHSB / Anti-Cheat qoidalariga binoan ushbu urinish <b>0 ball (Mos emas)</b> bilan majburiy yakunlandi.
+          SkillProve Anti-Cheat qoidalariga binoan ushbu urinish <b>0 ball (Mos emas)</b> bilan majburiy yakunlandi.
         </div>
         <button class="btn btn-light btn-lg fw-bold w-100" id="locked-go-result">
           Natijalar sahifasiga o'tish
@@ -66,7 +66,7 @@ export default async function (ctx) {
 
     <div class="exam-top" style="top:0"><div class="container d-flex align-items-center gap-3 flex-wrap">
       <div class="me-auto"><div class="fw-bold text-navy">${t.job.title}</div><div class="small text-muted">${t.job.company_name} · ${qs.length} ta savol</div></div>
-      <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-shield-lock-fill me-1"></i>CHSB Anti-Cheat: Faol</span>
+      <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-shield-lock-fill me-1"></i>Anti-Cheat: Faol</span>
       <span class="small text-muted d-none d-md-inline" id="prog"></span><div class="timer" id="timer"><i class="bi bi-stopwatch me-1"></i><span>--:--</span></div>
       <button class="btn btn-primary" id="finish"><i class="bi bi-flag-fill me-1"></i>Testni yakunlash</button></div></div>
     <div class="container py-4 page-enter" id="exam-body" style="user-select:none;-webkit-user-select:none;filter:blur(10px);pointer-events:none;"><div class="row g-4"><div class="col-lg-3 order-lg-2"><div class="card-sp card-pad position-sticky" style="top:90px"><div class="card-title-sm">Savollar</div><div class="d-flex flex-wrap gap-2" id="dots"></div>

@@ -114,9 +114,9 @@ function finish(id, cheatReason = null) {
       new Date().toISOString(),
       JSON.stringify(zeroTechs),
       (r.correct || 0) + (r.wrong || 0),
-      `🚫 TEST BLOKLANDI (CHSB / Anti-Cheat): ${cheatReason}`,
+      `🚫 TEST BLOKLANDI (Anti-Cheat): ${cheatReason}`,
       JSON.stringify(["Imtihon qoidasi buzildi: Test vaqtida boshqa oynaga/sahifaga o'tish aniqlandi"]),
-      JSON.stringify(["Imtihonni CHSB qoidalariga rioya qilgan holda, boshqa oynalarga o'tmasdan qayta topshiring"]),
+      JSON.stringify(["Imtihonni xavfsizlik qoidalariga rioya qilgan holda, boshqa oynalarga o'tmasdan qayta topshiring"]),
       id
     );
     return get('SELECT * FROM attempts WHERE id=?', id);

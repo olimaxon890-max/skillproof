@@ -327,11 +327,11 @@ export async function handleMock(method, rawPath, body, currentUser) {
     Object.assign(a, {
       status: 'done', finished_at: new Date().toISOString(), total_score: total, tech_scores: body?.cheated ? tech_scores.map((t) => ({ ...t, score: 0, met: false })) : tech_scores, correct: body?.cheated ? 0 : correct, wrong: body?.cheated ? qs.length : wrong, practical_score: body?.cheated ? 0 : 100, verdict,
       summary: body?.cheated
-        ? `🚫 TEST BLOKLANDI (CHSB / Anti-Cheat): ${body.reason || "Nomzod imtihon vaqtida boshqa oynaga yoki sahifaga o'tgani sababli test qoidabuzarlik sifatida avtomatik bloklandi (0/100 ball)."}`
+        ? `🚫 TEST BLOKLANDI (Anti-Cheat): ${body.reason || "Nomzod imtihon vaqtida boshqa oynaga yoki sahifaga o'tgani sababli test qoidabuzarlik sifatida avtomatik bloklandi (0/100 ball)."}`
         : (verdict === 'full' ? `Nomzod kompaniyaning barcha talablariga to'liq javob beradi (${total}/100).` : `Umumiy natija ${total}/100. ${unmet.length ? unmet.map((x) => x.name).join(', ') + " bo'yicha bilimni oshirish tavsiya etiladi." : ''}`),
       strengths: body?.cheated ? [] : tech_scores.filter((t) => t.score >= 75).map((t) => `${t.name} bo'yicha yuqori natija (${t.score} ball)`),
       weaknesses: body?.cheated ? ["Imtihon qoidasi buzildi: Test vaqtida boshqa oynaga/sahifaga chiqish aniqlandi"] : unmet.map((t) => `${t.name}: ${t.score} ball (talab ${t.required})`),
-      recommendations: body?.cheated ? ["Imtihonni CHSB qoidalariga rioya qilgan holda, boshqa oynalarga o'tmasdan qayta topshiring"] : unmet.map((t) => `${t.name} bo'yicha bilimingizni rivojlantirish tavsiya etiladi`),
+      recommendations: body?.cheated ? ["Imtihonni xavfsizlik qoidalariga rioya qilgan holda, boshqa oynalarga o'tmasdan qayta topshiring"] : unmet.map((t) => `${t.name} bo'yicha bilimingizni rivojlantirish tavsiya etiladi`),
     });
     saveDb(db);
     return { ok: true, id: a.id };
