@@ -10,8 +10,8 @@ export function validateEmail(raw) {
   if (base) return base;
   const [local, domain] = email.split('@');
   if (local.includes('+')) return "Email ichida «+» belgisi bo'lishi mumkin emas. Oddiy, asosiy pochta manzilingizni kiriting.";
-  if (GMAIL.has(domain) && (local.match(/\./g) || []).length > 2) {
-    return "Gmail manzilida nuqtalar juda ko'p. Oddiy, asosiy pochta manzilingizni kiriting.";
+  if (GMAIL.has(domain) && (local.match(/\./g) || []).length > 1) {
+    return "Gmail manzilida ko'pi bilan 1 ta nuqta bo'lishi mumkin. Oddiy, asosiy pochta manzilingizni kiriting.";
   }
   return null;
 }
