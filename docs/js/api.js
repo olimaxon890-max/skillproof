@@ -10,40 +10,63 @@ export const session = {
   clear() { localStorage.removeItem(KEY); localStorage.removeItem(UKEY); },
 };
 
-let useMock = location.hostname.endsWith('github.io') ? true : null;
+// Backend rejimi bir marta aniqlanadi va keyin o'zgarmaydi ('server' yoki 'mock').
+let mode = location.hostname.endsWith('github.io') ? 'mock' : null;
+let detecting = null;
+function detect() {
+  if (mode) return Promise.resolve(mode);
+  detecting ||= (async () => {
+    if (location.protocol === 'file:') return (mode = 'mock');
+    let r;
+    try { r = await fetch('/api/public/stats', { headers: { Accept: 'application/json' }, cache: 'no-store' }); }
+    catch { detecting = null; throw new Error("Serverga ulanib bo'lmadi. Internet yoki serverni tekshiring"); }
+    const ct = r.headers.get('content-type') || '';
+    // Statik hosting (GitHub Pages) API ga HTML 404/405 qaytaradi -> brauzer ichidagi baza
+    mode = ct.includes('application/json') || r.status >= 500 ? 'server' : 'mock';
+    return mode;
+  })();
+  return detecting;
+}
 
 async function callMock(method, path, body) {
   const { handleMock } = await import('./mockBackend.js');
-  return handleMock(method, path, body, session.user);
+  try {
+    return await handleMock(method, path, body, session.user);
+  } catch (e) {
+    if (e.status === 401 && session.token) { session.clear(); location.hash = '#/login'; }
+    throw e;
+  }
 }
 
 async function request(method, path, body, raw = false) {
-  if (useMock === true) return callMock(method, path, body);
+  if ((await detect()) === 'mock') return callMock(method, path, body);
 
   const headers = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (session.token) headers.Authorization = 'Bearer ' + session.token;
   let res;
-  try {
-    res = await fetch('/api' + path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
-    const ct = res.headers.get('content-type') || '';
-    if (res.status === 404 && !ct.includes('application/json') && useMock === null) {
-      useMock = true;
-      return callMock(method, path, body);
+  // Hosting uyg'onayotganda (502/503/504) so'rov serverga yetmagan bo'ladi, shuning uchun 2 marta qayta uriniladi
+  for (let attempt = 0; ; attempt++) {
+    try {
+      res = await fetch('/api' + path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+    } catch {
+      throw new Error("Serverga ulanib bo'lmadi. Internet yoki serverni tekshiring");
     }
-    useMock = false;
-  } catch {
-    if (useMock === null) {
-      useMock = true;
-      return callMock(method, path, body);
-    }
-    throw new Error("Serverga ulanib bo'lmadi. Internet yoki serverni tekshiring");
+    if ([502, 503, 504].includes(res.status) && attempt < 2) { await new Promise((r) => setTimeout(r, 1500 * (attempt + 1))); continue; }
+    break;
   }
   if (raw && res.ok) return res;
-  const data = await res.json().catch(() => ({}));
+  const text = await res.text().catch(() => '');
+  let data = {};
+  try { data = JSON.parse(text); } catch {}
   if (!res.ok) {
     if (res.status === 401 && session.token) { session.clear(); location.hash = '#/login'; }
-    const err = new Error(data.error || 'Xatolik yuz berdi');
+    if (data.error === undefined) console.error('API xatosi', method, path, res.status, text.slice(0, 300));
+    const fallback = res.status === 429 ? "Juda ko'p urinish. Birozdan keyin qayta urinib ko'ring"
+      : res.status === 413 ? "Yuborilayotgan ma'lumot juda katta"
+      : res.status >= 500 ? `Server vaqtincha ishlamayapti (HTTP ${res.status}). Birozdan keyin qayta urinib ko'ring`
+      : `So'rov rad etildi (HTTP ${res.status}). Sahifani yangilab qayta urinib ko'ring`;
+    const err = new Error(data.error || fallback);
     err.status = res.status;
     throw err;
   }
@@ -56,7 +79,7 @@ export const api = {
   put: (p, b = {}) => request('PUT', p, b),
   del: (p) => request('DELETE', p),
   async download(path, filename) {
-    if (useMock) {
+    if ((await detect()) === 'mock') {
       window.print();
       return;
     }
