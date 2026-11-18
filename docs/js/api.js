@@ -11,6 +11,8 @@ export const session = {
 };
 
 // Backend rejimi bir marta aniqlanadi va keyin o'zgarmaydi ('server' yoki 'mock').
+// Eski kodda har bir javob rejimni o'zgartirib yuborar edi, shuning uchun ba'zan
+// so'rovlar noto'g'ri joyga ketib "Xatolik yuz berdi" chiqar edi.
 let mode = location.hostname.endsWith('github.io') ? 'mock' : null;
 let detecting = null;
 function detect() {
@@ -31,6 +33,21 @@ function detect() {
 async function callMock(method, path, body) {
   const { handleMock } = await import('./mockBackend.js');
   try {
+    if (method === 'POST' && path === '/auth/register') {
+      const { validateEmail, canonicalEmail } = await import('./emailPolicy.js');
+      const problem = validateEmail(body?.email);
+      if (problem) throw new Error(problem);
+      body = { ...body, email: canonicalEmail(body.email) };
+    }
+    if (method === 'POST' && path === '/auth/login') {
+      const { canonicalEmail } = await import('./emailPolicy.js');
+      try { return await handleMock(method, path, body, session.user); }
+      catch (e) {
+        const c = canonicalEmail(body?.email);
+        if (c === String(body?.email || '').trim().toLowerCase()) throw e;
+        return await handleMock(method, path, { ...body, email: c }, session.user);
+      }
+    }
     return await handleMock(method, path, body, session.user);
   } catch (e) {
     if (e.status === 401 && session.token) { session.clear(); location.hash = '#/login'; }
