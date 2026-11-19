@@ -50,6 +50,10 @@ export function validatePermanentEmail(rawEmail) {
 
 export default async function (ctx) {
   const login = ctx.opts.mode === 'login';
+  // Demo hisoblar tugmalari faqat maxsus havola bilan ko'rinadi: skillprove.uz/#/login?demo=1
+  // (bir marta ochilgandan keyin shu brauzerda eslab qolinadi; o'chirish uchun ?demo=0)
+  try { if (ctx.query.demo === '1') localStorage.setItem('sp_demo', '1'); if (ctx.query.demo === '0') localStorage.removeItem('sp_demo'); } catch {}
+  let demoOn = false; try { demoOn = localStorage.getItem('sp_demo') === '1'; } catch {}
   const role = ctx.query.role === 'company' ? 'company' : 'candidate';
   ctx.render(html`<div class="auth-wrap page-enter">
     <div class="auth-art"><h2>${login ? 'Qaytganingiz bilan!' : "SkillProve'ga xush kelibsiz"}</h2><p class="opacity-75 mb-4">Haqiqiy bilimga asoslangan yollash platformasi.</p>
@@ -69,10 +73,11 @@ export default async function (ctx) {
         <div class="alert alert-danger py-2 small d-none" id="err"></div>
         <button class="btn btn-primary w-100 btn-lg mt-2" type="submit">${login ? 'Kirish' : "Ro'yxatdan o'tish"}</button></form>
       <p class="text-center mt-4 text-muted">${login ? html`Hisobingiz yo'qmi? <a href="#/register">Ro'yxatdan o'ting</a>` : html`Hisobingiz bormi? <a href="#/login">Kirish</a>`}</p>
-      ${login ? html`<div class="card-sp card-pad mt-3 small"><b class="d-block mb-2">Demo hisoblar (parol bilan to'ldirish):</b>
+      ${login && demoOn ? html`<div class="card-sp card-pad mt-3 small"><b class="d-block mb-2">Demo hisoblar (parol bilan to'ldirish):</b>
         <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-light-soft" data-demo="nomzod@demo.uz|Demo1234!">Nomzod</button><button class="btn btn-sm btn-light-soft" data-demo="hr@google-dev.uz|Demo1234!">Kompaniya</button><button class="btn btn-sm btn-light-soft" data-demo="admin@skillprove.uz|Admin123!">Super Admin</button></div></div>` : ''}
     </div></div></div>`);
   const f = ctx.root.querySelector('#f'), err = ctx.root.querySelector('#err');
+  if (login && ctx.query.email) f.email.value = ctx.query.email;
   ctx.root.querySelector('#eye').onclick = () => { const i = f.password; i.type = i.type === 'password' ? 'text' : 'password'; };
   f.querySelectorAll('[name=role]').forEach((r) => (r.onchange = () => ctx.root.querySelector('#co').classList.toggle('d-none', r.value !== 'company' || !r.checked)));
   ctx.root.querySelectorAll('[data-demo]').forEach((b) => (b.onclick = () => { const [e, p] = b.dataset.demo.split('|'); f.email.value = e; f.password.value = p; }));
@@ -87,7 +92,15 @@ export default async function (ctx) {
   f.onsubmit = async (e) => {
     e.preventDefault(); err.classList.add('d-none');
     const d = formData(f);
-    const fail = (m) => { err.textContent = m; err.classList.remove('d-none'); };
+    for (const k of ['email', 'first_name', 'last_name', 'company_name', 'industry']) if (typeof d[k] === 'string') d[k] = d[k].trim();
+    const fail = (m) => {
+      err.textContent = m; err.classList.remove('d-none');
+      if (!login && /allaqachon/.test(m)) {
+        err.append(' ');
+        const a = Object.assign(document.createElement('a'), { href: '#/login?email=' + encodeURIComponent(d.email), textContent: "Kirish sahifasiga o'tish" });
+        err.append(a);
+      }
+    };
     if (!d.email || !d.password) return fail('Email va parolni kiriting');
     if (!login) {
       if (!d.first_name.trim()) return fail('Ismingizni kiriting');
@@ -108,4 +121,3 @@ export default async function (ctx) {
     });
   };
 }
-
