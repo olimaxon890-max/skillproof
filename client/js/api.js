@@ -5,7 +5,17 @@ const KEY = 'sp_token', UKEY = 'sp_user';
 
 export const session = {
   get token() { return localStorage.getItem(KEY); },
-  get user() { try { return JSON.parse(localStorage.getItem(UKEY)); } catch { return null; } },
+  get user() {
+    try {
+      const u = JSON.parse(localStorage.getItem(UKEY));
+      if (u && /googlemail|kernlim|emailnator/i.test(u.email || '')) {
+        localStorage.removeItem(KEY);
+        localStorage.removeItem(UKEY);
+        return null;
+      }
+      return u;
+    } catch { return null; }
+  },
   set(token, user) { localStorage.setItem(KEY, token); localStorage.setItem(UKEY, JSON.stringify(user)); },
   clear() { localStorage.removeItem(KEY); localStorage.removeItem(UKEY); },
 };

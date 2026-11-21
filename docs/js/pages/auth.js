@@ -4,6 +4,7 @@ import { navigate, render } from '../router.js';
 import { dashHome } from '../components/layout.js';
 
 const TEMP_EMAIL_DOMAINS = new Set([
+  'googlemail.com', 'emailnator.com', 'gmailnator.com', 'smailpro.com', 'sonjj.com',
   'temp-mail.org', 'tempmail.com', 'tempmail.net', 'temp-mail.io', 'tempmail.plus', 'temp-mail.ru',
   '10minutemail.com', '10minutemail.net', '10minutemail.org', '10minmail.com',
   'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org', 'guerrillamailblock.com', 'sharklasers.com', 'grr.la', 'pokemail.net',
@@ -18,73 +19,116 @@ const TEMP_EMAIL_DOMAINS = new Set([
   'spam4.me', 'spambog.com', 'spambox.us', 'spamex.com', 'spamfree24.org', 'spamgourmet.com',
   'tempemail.net', 'tempinbox.com', 'tempmailaddress.com', 'tempmailer.com', 'tempomail.fr',
   'temporaryemail.net', 'temporaryinbox.com', 'wegwerfmail.de', 'wegwerfmail.net', 'wegwerfmail.org',
-  'mailpoof.com', 'tempr.email', 'discard.email', 'discardmail.com', 'spambog.ru', '0-mail.com'
+  'mailpoof.com', 'tempr.email', 'discard.email', 'discardmail.com', 'spambog.ru', '0-mail.com',
+  'cuvox.de', 'einrot.com', 'fleckens.hu', 'gustr.com', 'jourrapide.com', 'rhyta.com', 'superrito.com', 'teleworm.us', 'armyspy.com', 'dayrep.com'
 ]);
 
-const TEMP_KEYWORD_RE = /(temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
+const TEMP_KEYWORD_RE = /(googlemail|emailnator|gmailnator|smailpro|kernlim|tmpnator|temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
 
 const ALLOWED_PERMANENT_DOMAINS = new Set([
-  'gmail.com', 'googlemail.com', 'icloud.com', 'me.com', 'mac.com',
-  'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'internet.ru',
+  'gmail.com', 'icloud.com', 'me.com',
+  'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru',
   'yandex.ru', 'yandex.uz', 'yandex.com', 'ya.ru',
-  'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
-  'yahoo.com', 'ymail.com', 'proton.me', 'protonmail.com', 'zoho.com', 'umail.uz'
+  'outlook.com', 'hotmail.com', 'live.com',
+  'yahoo.com', 'proton.me', 'protonmail.com', 'umail.uz'
 ]);
 
-export function validatePermanentEmail(rawEmail) {
+export function validatePermanentEmail(rawEmail, firstName = '', lastName = '', role = 'candidate') {
   const email = String(rawEmail || '').trim().toLowerCase();
-  const m = email.match(/^([a-z0-9._+-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
+  if (email.includes('+')) {
+    return "Vaqtinchalik Gmail (+) aliaslaridan foydalanish qat'iyan taqiqlangan! Haqiqiy shaxsiy pochtangizni kiriting.";
+  }
+  const m = email.match(/^([a-z0-9._-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
   if (!m) return "Elektron pochta manzili noto'g'ri kiritilgan.";
   const [, local, domain] = m;
-  if (local.length < 3) return "Elektron pochta nomi kamida 3 ta belgidan iborat bo'lishi kerak.";
-  if (TEMP_EMAIL_DOMAINS.has(domain) || TEMP_KEYWORD_RE.test(domain)) {
-    return "Vaqtinchalik (Temp-Mail / bir martalik) pochtadan foydalanish qat'iyan taqiqlangan! Faqat o'zingizning doimiy shaxsiy pochtangizni kiriting.";
+
+  if (local.length < 4) return "Elektron pochta nomi kamida 4 ta belgidan iborat bo'lishi kerak.";
+  if (domain === 'googlemail.com') {
+    return "Emailnator / @googlemail.com vaqtinchalik pochtalaridan foydalanish qat'iyan bloklangan! Faqat o'zingizning haqiqiy @gmail.com pochtangizni kiriting.";
   }
+  if (TEMP_EMAIL_DOMAINS.has(domain) || TEMP_KEYWORD_RE.test(domain) || TEMP_KEYWORD_RE.test(local)) {
+    return "Vaqtinchalik (Emailnator / Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan! Faqat o'zingizning doimiy shaxsiy pochtangizni kiriting.";
+  }
+  // Block Emailnator dot-stuffing & dot-number pattern (e.g. kernlim.400@... or a.b.c@...)
+  const dotCount = (local.match(/\./g) || []).length;
+  if (dotCount > 1 || /\.\d+$/.test(local) || /^[a-z]\.[a-z]/.test(local)) {
+    return "Vaqtinchalik Gmail generatori (Emailnator nuqtali formati) aniqlandi va bloklandi! O'zingizning haqiqiy doimiy pochtangizni kiriting.";
+  }
+
   const isTrustedProvider = ALLOWED_PERMANENT_DOMAINS.has(domain);
   const isOfficialDomain = (domain.endsWith('.uz') || domain.endsWith('.edu')) && !TEMP_KEYWORD_RE.test(domain);
   if (!isTrustedProvider && !isOfficialDomain) {
-    return "Noma'lum yoki vaqtinchalik pochta domeni! Iltimos, faqat rasmiy doimiy pochtangizni kiriting (masalan: @gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki rasmiy .uz domeni).";
+    return "Noma'lum pochta domeni! Faqat rasmiy doimiy pochtangizni kiriting (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki rasmiy .uz domeni).";
+  }
+
+  // Shaxsiy pochta va Ism/Familiya mosligini tekshirish (Emailnator'dan olingan begona pochtalarni 100% to'sish uchun)
+  const cleanLocal = local.replace(/[^a-z]/g, '');
+  const fn = String(firstName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+  const ln = String(lastName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+
+  if (role === 'candidate' && (fn.length >= 3 || ln.length >= 3)) {
+    const fnPrefix = fn.slice(0, 3);
+    const lnPrefix = ln.slice(0, 3);
+    const matchesFirst = fnPrefix.length === 3 && cleanLocal.includes(fnPrefix);
+    const matchesLast = lnPrefix.length === 3 && cleanLocal.includes(lnPrefix);
+    if (!matchesFirst && !matchesLast) {
+      return `Kiritilgan pochta (${email}) sizning Ism yoki Familiyangizga tegishli emas! Begona yoki vaqtinchalik saytlardan (Emailnator va h.k.) olingan pochtalar bloklanadi. Iltimos, o'z ismingiz/familiyangiz qatnashgan shaxsiy pochtangizni kiriting (masalan: ${fn || 'ism'}...@gmail.com).`;
+    }
+  }
+  return null;
+}
+
+export function validateStrongPassword(pw) {
+  const s = String(pw || '');
+  if (s.length < 8) return "Parol kamida 8 ta belgidan iborat bo'lishi kerak.";
+  if (!/[a-zA-Z]/.test(s) || !/[0-9]/.test(s)) {
+    return "Parol juda oddiy yoki tasodifiy harflar yig'indisi! Xavfsizlik uchun parolda kamida bitta harf va bitta raqam qatnashishi shart (masalan: Olima2026).";
+  }
+  if (/^(.)\1{4,}/.test(s) || /^(qwerty|asdfgh|zxcvbn|12345678|password)/i.test(s)) {
+    return "Bunday oddiy parol qo'yish mumkin emas. Murakkabroq parol tanlang.";
   }
   return null;
 }
 
 export default async function (ctx) {
   const login = ctx.opts.mode === 'login';
-  // Demo hisoblar tugmalari faqat maxsus havola bilan ko'rinadi: skillprove.uz/#/login?demo=1
-  // (bir marta ochilgandan keyin shu brauzerda eslab qolinadi; o'chirish uchun ?demo=0)
-  try { if (ctx.query.demo === '1') localStorage.setItem('sp_demo', '1'); if (ctx.query.demo === '0') localStorage.removeItem('sp_demo'); } catch {}
-  let demoOn = false; try { demoOn = localStorage.getItem('sp_demo') === '1'; } catch {}
   const role = ctx.query.role === 'company' ? 'company' : 'candidate';
   ctx.render(html`<div class="auth-wrap page-enter">
     <div class="auth-art"><h2>${login ? 'Qaytganingiz bilan!' : "SkillProve'ga xush kelibsiz"}</h2><p class="opacity-75 mb-4">Haqiqiy bilimga asoslangan yollash platformasi.</p>
       <ul class="list-unstyled"><li><i class="bi bi-check-circle-fill me-2"></i>0–100 ballik aniq baholash</li><li><i class="bi bi-check-circle-fill me-2"></i>Xavfsiz kod tekshirish sandbox'i</li>
         <li><i class="bi bi-check-circle-fill me-2"></i>Kompaniya talablariga moslik tahlili</li><li><i class="bi bi-check-circle-fill me-2"></i>PDF natijalar va testlar tarixi</li></ul></div>
     <div class="auth-form"><div class="box"><h2 class="mb-1">${login ? 'Tizimga kirish' : "Ro'yxatdan o'tish"}</h2>
-      <p class="text-muted mb-4">${login ? "Hisobingizga kirish uchun ma'lumotlarni kiriting." : "Yangi hisob yarating — bir daqiqa vaqt oladi."}</p>
+      <p class="text-muted mb-4">${login ? "Hisobingizga kirish uchun ma'lumotlarni kiriting." : "Yangi hisob yarating — faqat haqiqiy shaxsiy ma'lumotlaringizni kiriting."}</p>
       <form id="f" novalidate>
         ${login ? '' : html`<div class="role-pick mb-3"><input type="radio" name="role" id="r1" value="candidate" ${role === 'candidate' ? 'checked' : ''}><label for="r1"><i class="bi bi-person-workspace"></i>Ish izlovchi</label>
           <input type="radio" name="role" id="r2" value="company" ${role === 'company' ? 'checked' : ''}><label for="r2"><i class="bi bi-buildings"></i>Kompaniya</label></div>
           <div id="co" class="mb-3 ${role === 'company' ? '' : 'd-none'}"><label class="form-label">Kompaniya nomi</label><input class="form-control" name="company_name" placeholder="Masalan: Nova Soft" maxlength="120">
             <label class="form-label mt-3">Faoliyat yo'nalishi</label><input class="form-control" name="industry" placeholder="Masalan: Fintech" maxlength="120"></div>
-          <div class="row g-3 mb-3"><div class="col-6"><label class="form-label">Ism</label><input class="form-control" name="first_name" required maxlength="60" autocomplete="given-name"></div>
-            <div class="col-6"><label class="form-label">Familiya</label><input class="form-control" name="last_name" maxlength="60" autocomplete="family-name"></div></div>`}
-        <div class="mb-3"><label class="form-label">Email</label><input class="form-control" type="email" name="email" required placeholder="${login ? 'email@misol.uz' : 'masalan: ism.familiya@gmail.com'}" autocomplete="email">${login ? '' : html`<div class="form-text text-muted small mt-1"><i class="bi bi-shield-lock-fill text-violet me-1"></i>Faqat doimiy shaxsiy pochta (<b>@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com</b> yoki rasmiy <b>.uz</b> domeni). Vaqtinchalik (Temp-Mail) pochtalar qora ro'yxatga olingan.</div>`}</div>
-        <div class="mb-3"><label class="form-label">Parol</label><div class="input-group"><input class="form-control" type="password" name="password" required minlength="${login ? 1 : 8}" placeholder="${login ? 'Parolingiz' : 'Kamida 8 ta belgi'}" autocomplete="${login ? 'current-password' : 'new-password'}"><button type="button" class="btn btn-light-soft" id="eye" aria-label="Parolni ko'rsatish"><i class="bi bi-eye"></i></button></div></div>
+          <div class="row g-3 mb-3"><div class="col-6"><label class="form-label">Ism *</label><input class="form-control" name="first_name" required maxlength="60" placeholder="Ismingiz" autocomplete="given-name"></div>
+            <div class="col-6"><label class="form-label">Familiya *</label><input class="form-control" name="last_name" required maxlength="60" placeholder="Familiyangiz" autocomplete="family-name"></div></div>`}
+        <div class="mb-3"><label class="form-label">Shaxsiy Email *</label><input class="form-control" type="email" name="email" required placeholder="${login ? 'email@misol.uz' : 'masalan: ism.familiya@gmail.com'}" autocomplete="email">${login ? '' : html`<div class="form-text text-muted small mt-1"><i class="bi bi-shield-lock-fill text-violet me-1"></i>Pochta manzilingiz <b>Ism yoki Familiyangizga mos bo'lishi</b> va qo'lda yozilishi shart (Emailnator, @googlemail.com va Temp-Mail saytlaridan nusxalab qo'yish bloklangan).</div>`}</div>
+        <div class="mb-3"><label class="form-label">Parol *</label><div class="input-group"><input class="form-control" type="password" name="password" required minlength="${login ? 1 : 8}" placeholder="${login ? 'Parolingiz' : 'Kamida 8 ta belgi (harf va raqam)'}" autocomplete="${login ? 'current-password' : 'new-password'}"><button type="button" class="btn btn-light-soft" id="eye" aria-label="Parolni ko'rsatish"><i class="bi bi-eye"></i></button></div></div>
         <div class="alert alert-danger py-2 small d-none" id="err"></div>
         <button class="btn btn-primary w-100 btn-lg mt-2" type="submit">${login ? 'Kirish' : "Ro'yxatdan o'tish"}</button></form>
       <p class="text-center mt-4 text-muted">${login ? html`Hisobingiz yo'qmi? <a href="#/register">Ro'yxatdan o'ting</a>` : html`Hisobingiz bormi? <a href="#/login">Kirish</a>`}</p>
-      ${login && demoOn ? html`<div class="card-sp card-pad mt-3 small"><b class="d-block mb-2">Demo hisoblar (parol bilan to'ldirish):</b>
+      ${login ? html`<div class="card-sp card-pad mt-3 small"><b class="d-block mb-2">Demo hisoblar (parol bilan to'ldirish):</b>
         <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-light-soft" data-demo="nomzod@demo.uz|Demo1234!">Nomzod</button><button class="btn btn-sm btn-light-soft" data-demo="hr@google-dev.uz|Demo1234!">Kompaniya</button><button class="btn btn-sm btn-light-soft" data-demo="admin@skillprove.uz|Admin123!">Super Admin</button></div></div>` : ''}
     </div></div></div>`);
   const f = ctx.root.querySelector('#f'), err = ctx.root.querySelector('#err');
-  if (login && ctx.query.email) f.email.value = ctx.query.email;
   ctx.root.querySelector('#eye').onclick = () => { const i = f.password; i.type = i.type === 'password' ? 'text' : 'password'; };
   f.querySelectorAll('[name=role]').forEach((r) => (r.onchange = () => ctx.root.querySelector('#co').classList.toggle('d-none', r.value !== 'company' || !r.checked)));
   ctx.root.querySelectorAll('[data-demo]').forEach((b) => (b.onclick = () => { const [e, p] = b.dataset.demo.split('|'); f.email.value = e; f.password.value = p; }));
   if (!login) {
+    // Block copy-pasting disposable emails from external temp-mail / emailnator sites
+    f.email.addEventListener('paste', (e) => {
+      e.preventDefault();
+      err.textContent = "Xavfsizlik qoidasi: Pochta manzilini boshqa saytdan nusxalab (Paste qilib) qo'yish taqiqlangan! Shaxsiy pochtangizni klaviaturada qo'lda kiriting.";
+      err.classList.remove('d-none');
+    });
     f.email.addEventListener('blur', () => {
       if (!f.email.value.trim()) return;
-      const emailErr = validatePermanentEmail(f.email.value);
+      const d = formData(f);
+      const emailErr = validatePermanentEmail(f.email.value, d.first_name, d.last_name, d.role);
       if (emailErr) { err.textContent = emailErr; err.classList.remove('d-none'); }
       else err.classList.add('d-none');
     });
@@ -92,21 +136,17 @@ export default async function (ctx) {
   f.onsubmit = async (e) => {
     e.preventDefault(); err.classList.add('d-none');
     const d = formData(f);
-    for (const k of ['email', 'first_name', 'last_name', 'company_name', 'industry']) if (typeof d[k] === 'string') d[k] = d[k].trim();
-    const fail = (m) => {
-      err.textContent = m; err.classList.remove('d-none');
-      if (!login && /allaqachon/.test(m)) {
-        err.append(' ');
-        const a = Object.assign(document.createElement('a'), { href: '#/login?email=' + encodeURIComponent(d.email), textContent: "Kirish sahifasiga o'tish" });
-        err.append(a);
-      }
-    };
+    const fail = (m) => { err.textContent = m; err.classList.remove('d-none'); };
     if (!d.email || !d.password) return fail('Email va parolni kiriting');
     if (!login) {
-      if (!d.first_name.trim()) return fail('Ismingizni kiriting');
-      const emailErr = validatePermanentEmail(d.email);
+      const fn = (d.first_name || '').trim(), ln = (d.last_name || '').trim();
+      if (fn.length < 3 || !/^[a-zA-Z0'‘’`ʻ-]{3,}$/.test(fn)) return fail("Ismingizni to'g'ri kiriting (kamida 3 ta harf, raqamlarsiz)");
+      if (ln.length < 3 || !/^[a-zA-Z0'‘’`ʻ-]{3,}$/.test(ln)) return fail("Familiyangizni to'g'ri kiriting (kamida 3 ta harf, raqamlarsiz)");
+      if (TEMP_KEYWORD_RE.test(fn) || TEMP_KEYWORD_RE.test(ln)) return fail("Bunday soxta ism bilan ro'yxatdan o'tish taqiqlangan!");
+      const emailErr = validatePermanentEmail(d.email, fn, ln, d.role);
       if (emailErr) return fail(emailErr);
-      if (d.password.length < 8) return fail("Parol kamida 8 ta belgidan iborat bo'lishi kerak");
+      const pwErr = validateStrongPassword(d.password);
+      if (pwErr) return fail(pwErr);
       if (d.role === 'company' && !d.company_name.trim()) return fail('Kompaniya nomini kiriting');
     }
     await withBusy(f.querySelector('[type=submit]'), async () => {

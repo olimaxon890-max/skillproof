@@ -4,8 +4,9 @@ const bcrypt = require('bcryptjs');
 const { get, run, tx, log } = require('../db');
 const { sign, auth, wrap } = require('../middleware');
 
-const emailRe = /^([a-z0-9._+-]+)@([a-z0-9.-]+\.[a-z]{2,})$/i;
+const emailRe = /^([a-z0-9._-]+)@([a-z0-9.-]+\.[a-z]{2,})$/i;
 const TEMP_EMAIL_DOMAINS = new Set([
+  'googlemail.com', 'emailnator.com', 'gmailnator.com', 'smailpro.com', 'sonjj.com',
   'temp-mail.org', 'tempmail.com', 'tempmail.net', 'temp-mail.io', 'tempmail.plus', 'temp-mail.ru',
   '10minutemail.com', '10minutemail.net', '10minutemail.org', '10minmail.com',
   'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org', 'guerrillamailblock.com', 'sharklasers.com', 'grr.la', 'pokemail.net',
@@ -22,27 +23,44 @@ const TEMP_EMAIL_DOMAINS = new Set([
   'temporaryemail.net', 'temporaryinbox.com', 'wegwerfmail.de', 'wegwerfmail.net', 'wegwerfmail.org',
   'mailpoof.com', 'tempr.email', 'discard.email', 'discardmail.com', 'spambog.ru', '0-mail.com'
 ]);
-const TEMP_KEYWORD_RE = /(temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
+const TEMP_KEYWORD_RE = /(googlemail|emailnator|gmailnator|smailpro|kernlim|tmpnator|temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
 const ALLOWED_PERMANENT_DOMAINS = new Set([
-  'gmail.com', 'googlemail.com', 'icloud.com', 'me.com', 'mac.com',
-  'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'internet.ru',
+  'gmail.com', 'icloud.com', 'me.com',
+  'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru',
   'yandex.ru', 'yandex.uz', 'yandex.com', 'ya.ru',
-  'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
-  'yahoo.com', 'ymail.com', 'proton.me', 'protonmail.com', 'zoho.com', 'umail.uz'
+  'outlook.com', 'hotmail.com', 'live.com',
+  'yahoo.com', 'proton.me', 'protonmail.com', 'umail.uz'
 ]);
 
-function checkPermanentEmail(rawEmail) {
-  const m = String(rawEmail || '').trim().toLowerCase().match(emailRe);
+function checkPermanentEmail(rawEmail, firstName = '', lastName = '', role = 'candidate') {
+  const email = String(rawEmail || '').trim().toLowerCase();
+  if (email.includes('+')) return "Vaqtinchalik Gmail (+) aliaslaridan foydalanish taqiqlangan";
+  const m = email.match(emailRe);
   if (!m) return "Email manzili noto'g'ri";
   const [, local, domain] = m;
-  if (local.length < 3) return "Email nomi kamida 3 ta belgidan iborat bo'lishi kerak";
-  if (TEMP_EMAIL_DOMAINS.has(domain) || TEMP_KEYWORD_RE.test(domain)) {
-    return "Vaqtinchalik (Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan! Doimiy shaxsiy pochtangizni kiriting.";
+  if (local.length < 4) return "Email nomi kamida 4 ta belgidan iborat bo'lishi kerak";
+  if (domain === 'googlemail.com') return "Emailnator / @googlemail.com vaqtinchalik pochtalaridan foydalanish bloklangan";
+  const dotCount = (local.match(/\./g) || []).length;
+  if (dotCount > 1 || /\.\d+$/.test(local) || /^[a-z]\.[a-z]/.test(local)) {
+    return "Vaqtinchalik Gmail generatori (Emailnator nuqtali formati) aniqlandi va bloklandi";
+  }
+  if (TEMP_EMAIL_DOMAINS.has(domain) || TEMP_KEYWORD_RE.test(domain) || TEMP_KEYWORD_RE.test(local)) {
+    return "Vaqtinchalik (Emailnator / Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan!";
   }
   const isTrusted = ALLOWED_PERMANENT_DOMAINS.has(domain);
   const isOfficial = (domain.endsWith('.uz') || domain.endsWith('.edu')) && !TEMP_KEYWORD_RE.test(domain);
   if (!isTrusted && !isOfficial) {
     return "Faqat doimiy rasmiy pochtadan foydalanish mumkin (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki rasmiy .uz domeni).";
+  }
+  if (role === 'candidate') {
+    const fn = String(firstName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    const ln = String(lastName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    const cleanLocal = local.replace(/[^a-z]/g, '');
+    if (fn.length >= 3 || ln.length >= 3) {
+      const mFirst = fn.length >= 3 && cleanLocal.includes(fn.slice(0, 3));
+      const mLast = ln.length >= 3 && cleanLocal.includes(ln.slice(0, 3));
+      if (!mFirst && !mLast) return "Pochta manzili Ism yoki Familiyangizga mos kelmadi (begona yoki Emailnator pochtasi bloklandi)";
+    }
   }
   return null;
 }
@@ -52,8 +70,11 @@ const publicUser = (u) => ({ id: u.id, email: u.email, role: u.role, first_name:
 
 router.post('/register', wrap((req, res) => {
   const { email, password, role = 'candidate', first_name = '', last_name = '', company_name, industry = '' } = req.body || {};
-  const emailErr = checkPermanentEmail(email);
+  const emailErr = checkPermanentEmail(email, first_name, last_name, role);
   if (emailErr) return res.status(400).json({ error: emailErr });
+  if (!password || password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+    return res.status(400).json({ error: "Parolda kamida 8 ta belgi, harf va raqam qatnashishi shart" });
+  }
   if (!password || password.length < 8) return res.status(400).json({ error: "Parol kamida 8 ta belgidan iborat bo'lishi kerak" });
   if (!['candidate', 'company'].includes(role)) return res.status(400).json({ error: "Noto'g'ri rol" });
   if (!first_name.trim()) return res.status(400).json({ error: 'Ismingizni kiriting' });

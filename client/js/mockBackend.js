@@ -11,9 +11,22 @@ const VERDICTS = {
 };
 
 function initDb() {
+  try {
+    const curU = JSON.parse(localStorage.getItem('sp_user') || 'null');
+    if (curU && /googlemail|kernlim|emailnator/i.test(curU.email || '')) {
+      localStorage.removeItem('sp_token');
+      localStorage.removeItem('sp_user');
+    }
+  } catch {}
   const saved = localStorage.getItem(DB_KEY);
   if (saved) {
-    try { return JSON.parse(saved); } catch {}
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed.users)) {
+        parsed.users = parsed.users.filter((x) => !/googlemail|kernlim|emailnator/i.test(x.email || ''));
+      }
+      return parsed;
+    } catch {}
   }
   const categories = [
     { id: 1, name: 'Frontend dasturchi', icon: 'bi-window-stack', description: '' },
@@ -166,20 +179,49 @@ export async function handleMock(method, rawPath, body, currentUser) {
 
   // --- AUTH ---
   if (method === 'POST' && path === '/auth/login') {
-    const found = db.users.find((x) => x.email.toLowerCase() === String(body.email || '').toLowerCase() && x.pass === body.password);
+    const loginEmail = String(body.email || '').trim().toLowerCase();
+    if (/googlemail|kernlim|emailnator/i.test(loginEmail)) {
+      throw new Error("Vaqtinchalik (Emailnator / @googlemail.com) pochtalar bloklangan!");
+    }
+    const found = db.users.find((x) => x.email.toLowerCase() === loginEmail && x.pass === body.password);
     if (!found) throw new Error("Email yoki parol noto'g'ri");
     if (found.status === 'blocked') throw new Error('Hisobingiz bloklangan');
     return { token: 'mock-jwt-' + found.id, user: found };
   }
   if (method === 'POST' && path === '/auth/register') {
     const rawEmail = String(body.email || '').trim().toLowerCase();
-    const mEmail = rawEmail.match(/^([a-z0-9._+-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
+    if (rawEmail.includes('+')) {
+      throw new Error("Vaqtinchalik Gmail (+) aliaslaridan foydalanish qat'iyan taqiqlangan!");
+    }
+    const mEmail = rawEmail.match(/^([a-z0-9._-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
     if (!mEmail) throw new Error("Elektron pochta manzili noto'g'ri kiritilgan.");
     const [, localPart, domainPart] = mEmail;
-    const tempRe = /(temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
-    const allowedDomains = new Set(['gmail.com', 'googlemail.com', 'icloud.com', 'me.com', 'mac.com', 'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'internet.ru', 'yandex.ru', 'yandex.uz', 'yandex.com', 'ya.ru', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com', 'yahoo.com', 'ymail.com', 'proton.me', 'protonmail.com', 'zoho.com', 'umail.uz']);
-    if (localPart.length < 3 || tempRe.test(domainPart) || (!allowedDomains.has(domainPart) && !domainPart.endsWith('.uz') && !domainPart.endsWith('.edu'))) {
-      throw new Error("Vaqtinchalik (Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan! Faqat doimiy shaxsiy pochtangizni kiriting (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki .uz).");
+    const tempRe = /(googlemail|emailnator|gmailnator|smailpro|kernlim|tmpnator|temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
+    const allowedDomains = new Set(['gmail.com', 'icloud.com', 'me.com', 'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'yandex.ru', 'yandex.uz', 'yandex.com', 'ya.ru', 'outlook.com', 'hotmail.com', 'live.com', 'yahoo.com', 'proton.me', 'protonmail.com', 'umail.uz']);
+    if (domainPart === 'googlemail.com') {
+      throw new Error("Emailnator / @googlemail.com vaqtinchalik pochtalaridan foydalanish qat'iyan bloklangan!");
+    }
+    const dotCount = (localPart.match(/\./g) || []).length;
+    if (dotCount > 1 || /\.\d+$/.test(localPart) || /^[a-z]\.[a-z]/.test(localPart)) {
+      throw new Error("Vaqtinchalik Gmail generatori (Emailnator nuqtali formati) aniqlandi va bloklandi!");
+    }
+    if (localPart.length < 4 || tempRe.test(domainPart) || tempRe.test(localPart) || (!allowedDomains.has(domainPart) && !domainPart.endsWith('.uz') && !domainPart.endsWith('.edu'))) {
+      throw new Error("Vaqtinchalik (Emailnator / Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan! Faqat doimiy shaxsiy pochtangizni kiriting.");
+    }
+    const fn = String(body.first_name || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    const ln = String(body.last_name || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    const cleanLocal = localPart.replace(/[^a-z]/g, '');
+    if ((body.role || 'candidate') === 'candidate') {
+      if (fn.length < 3 || ln.length < 3) throw new Error("Ism va Familiyangizni to'liq kiriting (kamida 3 ta harf).");
+      const matchesFirst = cleanLocal.includes(fn.slice(0, 3));
+      const matchesLast = cleanLocal.includes(ln.slice(0, 3));
+      if (!matchesFirst && !matchesLast) {
+        throw new Error(`Kiritilgan pochta (${rawEmail}) sizning Ism yoki Familiyangizga mos kelmadi! Begona yoki Emailnator saytidan olingan pochtalar bloklanadi.`);
+      }
+    }
+    const pw = String(body.password || '');
+    if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) {
+      throw new Error("Parol xavfsiz emas! Parolda kamida 8 ta belgi, harf va raqam qatnashishi shart.");
     }
     if (db.users.some((x) => x.email.toLowerCase() === rawEmail)) throw new Error("Bu email allaqachon ro'yxatdan o'tgan");
     let cid = null;
