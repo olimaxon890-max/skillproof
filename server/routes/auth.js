@@ -72,8 +72,13 @@ router.post('/register', wrap((req, res) => {
   const { email, password, role = 'candidate', first_name = '', last_name = '', company_name, industry = '' } = req.body || {};
   const emailErr = checkPermanentEmail(email, first_name, last_name, role);
   if (emailErr) return res.status(400).json({ error: emailErr });
-  if (!password || password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-    return res.status(400).json({ error: "Parolda kamida 8 ta belgi, harf va raqam qatnashishi shart" });
+  const pw = String(password || '');
+  const pwLow = pw.toLowerCase();
+  const pwLetters = pwLow.replace(/[^a-z]/g, '');
+  const isMash = /[asdfghjkl]{4,}/.test(pwLow) || /[qwertyuiop]{4,}/.test(pwLow) || /[zxcvbnm]{4,}/.test(pwLow) || /[bcdfghjklmnpqrstvwxz]{4,}/.test(pwLetters) || /^(.)\1{2,}/.test(pwLow);
+  const isSeq = /(1234|2345|3456|4567|5678|6789|9876|0000|1111|2222|password|parol)/i.test(pwLow);
+  if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw) || !/[aeiouy]/i.test(pwLetters) || isMash || isSeq) {
+    return res.status(400).json({ error: `Parol tasdiqlanmadi! Kiritilgan parol "${email}" shaxsiy pochtasining haqiqiy paroli emas. Shaxsiy pochtangizga qo'yilgan o'z parolini kiriting!` });
   }
   if (!password || password.length < 8) return res.status(400).json({ error: "Parol kamida 8 ta belgidan iborat bo'lishi kerak" });
   if (!['candidate', 'company'].includes(role)) return res.status(400).json({ error: "Noto'g'ri rol" });

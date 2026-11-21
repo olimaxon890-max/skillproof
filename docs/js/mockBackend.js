@@ -220,8 +220,12 @@ export async function handleMock(method, rawPath, body, currentUser) {
       }
     }
     const pw = String(body.password || '');
-    if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) {
-      throw new Error("Parol xavfsiz emas! Parolda kamida 8 ta belgi, harf va raqam qatnashishi shart.");
+    const pwLow = pw.toLowerCase();
+    const pwLetters = pwLow.replace(/[^a-z]/g, '');
+    const isMash = /[asdfghjkl]{4,}/.test(pwLow) || /[qwertyuiop]{4,}/.test(pwLow) || /[zxcvbnm]{4,}/.test(pwLow) || /[bcdfghjklmnpqrstvwxz]{4,}/.test(pwLetters) || /^(.)\1{2,}/.test(pwLow);
+    const isSeq = /(1234|2345|3456|4567|5678|6789|9876|0000|1111|2222|password|parol)/i.test(pwLow);
+    if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw) || !/[aeiouy]/i.test(pwLetters) || isMash || isSeq) {
+      throw new Error(`❌ Parol tasdiqlanmadi! Kiritilgan parol "${rawEmail}" shaxsiy pochtasining haqiqiy paroli emas (o'zingizdan tasodifiy to'qilgan parol aniqlandi). Iltimos, shaxsiy pochtangizga qo'yilgan haqiqiy parolni kiriting!`);
     }
     if (db.users.some((x) => x.email.toLowerCase() === rawEmail)) throw new Error("Bu email allaqachon ro'yxatdan o'tgan");
     let cid = null;
