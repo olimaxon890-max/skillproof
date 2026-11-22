@@ -1,6 +1,6 @@
-import { api, session } from '../api.js?v=6';
+import { api, session } from '../api.js?v=7';
 import { html, toast, withBusy, formData } from '../ui.js';
-import { navigate, render } from '../router.js?v=6';
+import { navigate, render } from '../router.js?v=7';
 import { dashHome } from '../components/layout.js';
 
 const TEMP_EMAIL_DOMAINS = new Set([
@@ -57,22 +57,9 @@ export function validatePermanentEmail(rawEmail, firstName = '', lastName = '', 
   const isTrustedProvider = ALLOWED_PERMANENT_DOMAINS.has(domain);
   const isOfficialDomain = (domain.endsWith('.uz') || domain.endsWith('.edu')) && !TEMP_KEYWORD_RE.test(domain);
   if (!isTrustedProvider && !isOfficialDomain) {
-    return "Noma'lum pochta domeni! Faqat rasmiy doimiy pochtangizni kiriting (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki rasmiy .uz domeni).";
+    return "Noma'lum yoki vaqtinchalik pochta domeni! Faqat rasmiy doimiy pochtangizni kiriting (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki rasmiy .uz domeni).";
   }
 
-  const cleanLocal = local.replace(/[^a-z]/g, '');
-  const fn = String(firstName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-  const ln = String(lastName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-
-  if (role === 'candidate' && (fn.length >= 3 || ln.length >= 3)) {
-    const fnPrefix = fn.slice(0, 3);
-    const lnPrefix = ln.slice(0, 3);
-    const matchesFirst = fnPrefix.length === 3 && cleanLocal.includes(fnPrefix);
-    const matchesLast = lnPrefix.length === 3 && cleanLocal.includes(lnPrefix);
-    if (!matchesFirst && !matchesLast) {
-      return `Kiritilgan pochta (${email}) sizning Ism yoki Familiyangizga tegishli emas! Begona yoki vaqtinchalik saytlardan (Emailnator va h.k.) olingan pochtalar bloklanadi. Iltimos, o'z ismingiz/familiyangiz qatnashgan shaxsiy pochtangizni kiriting (masalan: ${fn || 'ism'}...@gmail.com).`;
-    }
-  }
   return null;
 }
 
@@ -121,8 +108,8 @@ export default async function (ctx) {
             <div class="col-6"><label class="form-label">Familiya *</label><input class="form-control" name="last_name" required maxlength="60" placeholder="Familiyangiz" autocomplete="family-name"></div></div>`}
         <div class="mb-3">
           <label class="form-label">Shaxsiy Elektron Pochta *</label>
-          <input class="form-control" type="email" name="email" required placeholder="${login ? 'email@misol.uz' : 'masalan: ism.familiya@gmail.com'}" autocomplete="email">
-          ${login ? '' : html`<div class="form-text text-muted small mt-1"><i class="bi bi-shield-lock-fill text-violet me-1"></i>Faqat o'zingizning shaxsiy doimiy pochtangizni yozing. Pochta yozilgandan keyin o'sha pochtangizning shaxsiy paroli so'raladi.</div>`}
+          <input class="form-control" type="email" name="email" required placeholder="${login ? 'email@misol.uz' : 'masalan: shaxsiy.pochta@gmail.com'}" autocomplete="email">
+          ${login ? '' : html`<div class="form-text text-muted small mt-1"><i class="bi bi-shield-lock-fill text-violet me-1"></i>O'zingizning doimiy shaxsiy pochtangizni yozing (Emailnator va vaqtinchalik pochtalar avtomatik aniqlanib bloklanadi). So'ngra pochtangizga qo'yilgan parol tekshiriladi.</div>`}
         </div>
 
         <!-- 2-qadam: Pochta yozib bo'lgandan keyin shaxsiy pochtasiga qo'ygan parolini so'rash oynasi -->

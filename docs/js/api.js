@@ -23,7 +23,7 @@ export const session = {
 let useMock = location.hostname.endsWith('github.io') ? true : null;
 
 async function callMock(method, path, body) {
-  const { handleMock } = await import('./mockBackend.js?v=6');
+  const { handleMock } = await import('./mockBackend.js?v=7');
   return handleMock(method, path, body, session.user);
 }
 

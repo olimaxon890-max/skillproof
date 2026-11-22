@@ -208,16 +208,11 @@ export async function handleMock(method, rawPath, body, currentUser) {
     if (localPart.length < 4 || tempRe.test(domainPart) || tempRe.test(localPart) || (!allowedDomains.has(domainPart) && !domainPart.endsWith('.uz') && !domainPart.endsWith('.edu'))) {
       throw new Error("Vaqtinchalik (Emailnator / Temp-Mail) pochtadan foydalanish qat'iyan taqiqlangan! Faqat doimiy shaxsiy pochtangizni kiriting.");
     }
-    const fn = String(body.first_name || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-    const ln = String(body.last_name || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-    const cleanLocal = localPart.replace(/[^a-z]/g, '');
     if ((body.role || 'candidate') === 'candidate') {
-      if (fn.length < 3 || ln.length < 3) throw new Error("Ism va Familiyangizni to'liq kiriting (kamida 3 ta harf).");
-      const matchesFirst = cleanLocal.includes(fn.slice(0, 3));
-      const matchesLast = cleanLocal.includes(ln.slice(0, 3));
-      if (!matchesFirst && !matchesLast) {
-        throw new Error(`Kiritilgan pochta (${rawEmail}) sizning Ism yoki Familiyangizga mos kelmadi! Begona yoki Emailnator saytidan olingan pochtalar bloklanadi.`);
-      }
+      const fn = String(body.first_name || '').trim();
+      const ln = String(body.last_name || '').trim();
+      if (fn.length < 2) throw new Error("Ismingizni kiriting.");
+      if (ln.length < 2) throw new Error("Familiyangizni kiriting.");
     }
     const pw = String(body.password || '');
     const pwLow = pw.toLowerCase();
@@ -227,7 +222,13 @@ export async function handleMock(method, rawPath, body, currentUser) {
     if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw) || !/[aeiouy]/i.test(pwLetters) || isMash || isSeq) {
       throw new Error(`❌ Parol tasdiqlanmadi! Kiritilgan parol "${rawEmail}" shaxsiy pochtasining haqiqiy paroli emas (o'zingizdan tasodifiy to'qilgan parol aniqlandi). Iltimos, shaxsiy pochtangizga qo'yilgan haqiqiy parolni kiriting!`);
     }
-    if (db.users.some((x) => x.email.toLowerCase() === rawEmail)) throw new Error("Bu email allaqachon ro'yxatdan o'tgan");
+    const existingUser = db.users.find((x) => x.email.toLowerCase() === rawEmail);
+    if (existingUser) {
+      if (existingUser.pass !== pw) {
+        throw new Error(`❌ Parol xato! Kiritilgan parol "${rawEmail}" shaxsiy pochtasiga qo'yilgan haqiqiy parolga mos kelmadi!`);
+      }
+      return { token: 'mock-jwt-' + existingUser.id, user: existingUser };
+    }
     let cid = null;
     if (body.role === 'company') {
       cid = Math.max(0, ...db.companies.map((c) => c.id)) + 1;

@@ -52,16 +52,6 @@ function checkPermanentEmail(rawEmail, firstName = '', lastName = '', role = 'ca
   if (!isTrusted && !isOfficial) {
     return "Faqat doimiy rasmiy pochtadan foydalanish mumkin (@gmail.com, @icloud.com, @mail.ru, @yandex.uz, @outlook.com yoki rasmiy .uz domeni).";
   }
-  if (role === 'candidate') {
-    const fn = String(firstName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-    const ln = String(lastName || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-    const cleanLocal = local.replace(/[^a-z]/g, '');
-    if (fn.length >= 3 || ln.length >= 3) {
-      const mFirst = fn.length >= 3 && cleanLocal.includes(fn.slice(0, 3));
-      const mLast = ln.length >= 3 && cleanLocal.includes(ln.slice(0, 3));
-      if (!mFirst && !mLast) return "Pochta manzili Ism yoki Familiyangizga mos kelmadi (begona yoki Emailnator pochtasi bloklandi)";
-    }
-  }
   return null;
 }
 
@@ -84,7 +74,13 @@ router.post('/register', wrap((req, res) => {
   if (!['candidate', 'company'].includes(role)) return res.status(400).json({ error: "Noto'g'ri rol" });
   if (!first_name.trim()) return res.status(400).json({ error: 'Ismingizni kiriting' });
   if (role === 'company' && !(company_name || '').trim()) return res.status(400).json({ error: 'Kompaniya nomini kiriting' });
-  if (get('SELECT id FROM users WHERE email=?', email.toLowerCase())) return res.status(409).json({ error: "Bu email allaqachon ro'yxatdan o'tgan" });
+  const existing = get('SELECT * FROM users WHERE email=?', email.toLowerCase());
+  if (existing) {
+    if (!bcrypt.compareSync(String(password), existing.password_hash)) {
+      return res.status(400).json({ error: `Parol xato! Kiritilgan parol "${email}" shaxsiy pochtasiga qo'yilgan haqiqiy parolga mos kelmadi!` });
+    }
+    return res.json({ token: sign(existing), user: publicUser(existing) });
+  }
 
   const hash = bcrypt.hashSync(password, 10);
   const user = tx(() => {
