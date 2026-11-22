@@ -171,6 +171,9 @@ function runJsInBrowser(code, tests) {
   return { ok: passed === tests.length, passed, total: tests.length, cases, logs, mode: 'browser-sandbox' };
 }
 
+// Parol sessiyaga (brauzer xotirasiga) yozilmasligi uchun
+const safeUser = ({ pass, ...rest }) => rest;
+
 export async function handleMock(method, rawPath, body, currentUser) {
   const db = initDb();
   const [path, qs] = rawPath.split('?');
@@ -186,7 +189,38 @@ export async function handleMock(method, rawPath, body, currentUser) {
     const found = db.users.find((x) => x.email.toLowerCase() === loginEmail && x.pass === body.password);
     if (!found) throw new Error("Email yoki parol noto'g'ri");
     if (found.status === 'blocked') throw new Error('Hisobingiz bloklangan');
-    return { token: 'mock-jwt-' + found.id, user: found };
+    return { token: 'mock-jwt-' + found.id, user: safeUser(found) };
+  }
+  if (method === 'POST' && path === '/auth/google') {
+    // DIQQAT: statik (serversiz) rejimda Google imzosi tekshirilmaydi, faqat tokenning mazmuni o'qiladi.
+    // Haqiqiy tekshiruv serverda bajariladi (server/routes/auth.js, /auth/google).
+    const { GOOGLE_CLIENT_ID } = await import('./config.js');
+    let c;
+    try {
+      const b64 = String(body.credential || '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      c = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0))));
+    } catch { throw new Error("Google javobi noto'g'ri"); }
+    if (!GOOGLE_CLIENT_ID || c.aud !== GOOGLE_CLIENT_ID || !['accounts.google.com', 'https://accounts.google.com'].includes(c.iss) || !(c.exp * 1000 > Date.now())) throw new Error('Google tasdiqlashi muvaffaqiyatsiz');
+    if (!c.email || c.email_verified !== true) throw new Error('Google pochtangiz tasdiqlanmagan');
+    const gEmail = String(c.email).trim().toLowerCase();
+    const known = db.users.find((x) => x.email.toLowerCase() === gEmail);
+    if (known) {
+      if (known.role === 'admin') throw new Error('Administrator hisobiga Google orqali kirib bo\'lmaydi');
+      if (known.status === 'blocked') throw new Error('Hisobingiz bloklangan');
+      return { token: 'mock-jwt-' + known.id, user: safeUser(known), created: false };
+    }
+    const gRole = body.role === 'company' ? 'company' : 'candidate';
+    if (gRole === 'company' && !String(body.company_name || '').trim()) throw new Error('Kompaniya nomini kiriting');
+    let gCid = null;
+    if (gRole === 'company') {
+      gCid = Math.max(0, ...db.companies.map((x) => x.id)) + 1;
+      db.companies.push({ id: gCid, name: String(body.company_name).trim(), slug: 'co-' + gCid, industry: body.industry || '', city: 'Toshkent', size: '10-50', logo: '', status: 'pending', description: '', created_at: new Date().toISOString() });
+    }
+    const gUid = Math.max(0, ...db.users.map((x) => x.id)) + 1;
+    const gNu = { id: gUid, email: gEmail, pass: crypto.randomUUID() + crypto.randomUUID(), role: gRole, first_name: c.given_name || String(c.name || 'Foydalanuvchi').split(' ')[0], last_name: c.family_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: gCid, created_at: new Date().toISOString() };
+    db.users.push(gNu);
+    saveDb(db);
+    return { token: 'mock-jwt-' + gNu.id, user: safeUser(gNu), created: true };
   }
   if (method === 'POST' && path === '/auth/register') {
     const rawEmail = String(body.email || '').trim().toLowerCase();
@@ -215,30 +249,18 @@ export async function handleMock(method, rawPath, body, currentUser) {
       if (ln.length < 2) throw new Error("Familiyangizni kiriting.");
     }
     const pw = String(body.password || '');
-    const pwLow = pw.toLowerCase();
-    const pwLetters = pwLow.replace(/[^a-z]/g, '');
-    const isMash = /[asdfghjkl]{4,}/.test(pwLow) || /[qwertyuiop]{4,}/.test(pwLow) || /[zxcvbnm]{4,}/.test(pwLow) || /[bcdfghjklmnpqrstvwxz]{4,}/.test(pwLetters) || /^(.)\1{2,}/.test(pwLow);
-    const isSeq = /(1234|2345|3456|4567|5678|6789|9876|0000|1111|2222|password|parol)/i.test(pwLow);
-    if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw) || !/[aeiouy]/i.test(pwLetters) || isMash || isSeq) {
-      throw new Error(`❌ Parol tasdiqlanmadi! Kiritilgan parol "${rawEmail}" shaxsiy pochtasining haqiqiy paroli emas (o'zingizdan tasodifiy to'qilgan parol aniqlandi). Iltimos, shaxsiy pochtangizga qo'yilgan haqiqiy parolni kiriting!`);
-    }
-    const existingUser = db.users.find((x) => x.email.toLowerCase() === rawEmail);
-    if (existingUser) {
-      if (existingUser.pass !== pw) {
-        throw new Error(`❌ Parol xato! Kiritilgan parol "${rawEmail}" shaxsiy pochtasiga qo'yilgan haqiqiy parolga mos kelmadi!`);
-      }
-      return { token: 'mock-jwt-' + existingUser.id, user: existingUser };
-    }
+    if (pw.length < 8) throw new Error("Parol kamida 8 ta belgidan iborat bo'lishi kerak");
+    if (db.users.some((x) => x.email.toLowerCase() === rawEmail)) throw new Error("Bu email allaqachon ro'yxatdan o'tgan");
     let cid = null;
     if (body.role === 'company') {
       cid = Math.max(0, ...db.companies.map((c) => c.id)) + 1;
       db.companies.push({ id: cid, name: body.company_name, slug: 'co-' + cid, industry: body.industry || '', city: 'Toshkent', size: '10-50', logo: '', status: 'pending', description: '', created_at: new Date().toISOString() });
     }
     const uid = Math.max(0, ...db.users.map((x) => x.id)) + 1;
-    const nu = { id: uid, email: body.email.toLowerCase(), pass: body.password, role: body.role || 'candidate', first_name: body.first_name, last_name: body.last_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: cid, created_at: new Date().toISOString() };
+    const nu = { id: uid, email: rawEmail, pass: pw, role: body.role || 'candidate', first_name: body.first_name, last_name: body.last_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: cid, created_at: new Date().toISOString() };
     db.users.push(nu);
     saveDb(db);
-    return { token: 'mock-jwt-' + nu.id, user: nu };
+    return { token: 'mock-jwt-' + nu.id, user: safeUser(nu) };
   }
 
   // --- PUBLIC ---
@@ -486,4 +508,3 @@ export async function handleMock(method, rawPath, body, currentUser) {
   }
   return { ok: true };
 }
-
