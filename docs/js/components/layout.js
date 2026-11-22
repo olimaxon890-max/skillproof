@@ -7,7 +7,7 @@ export const dashHome = (role) => DASH_HOME[role] || '#/';
 
 const SIDE = {
   candidate: [
-    ['#/candidate', 'bi-grid-1x2-fill', 'Bosh panel'], ['#/pricing', 'bi-gem', 'PRO & Olimpiadalar'], ['#/companies', 'bi-buildings', 'Kompaniyalar'], ['#/jobs', 'bi-briefcase', "Ish o'rinlari"],
+    ['#/candidate', 'bi-grid-1x2-fill', 'Bosh panel'], ['#/pricing', 'bi-gem', 'PRO'], ['#/companies', 'bi-buildings', 'Kompaniyalar'], ['#/jobs', 'bi-briefcase', "Ish o'rinlari"],
     ['#/candidate/history', 'bi-clock-history', 'Testlar tarixi'], ['#/editor', 'bi-terminal', 'Dasturlash muharriri'], ['#/candidate/profile', 'bi-person-circle', 'Mening profilim'],
   ],
   company: [
@@ -28,7 +28,7 @@ export function renderNav() {
     <a class="navbar-brand brand" href="#/"><span class="brand-mark"><i class="bi bi-shield-check"></i></span>SkillProve</a>
     <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menyu"><i class="bi bi-list fs-2"></i></button>
     <div class="collapse navbar-collapse" id="navMenu">
-      <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/editor', 'Dasturlash muharriri')}${link('#/pricing', '💎 PRO & Olimpiada')}</ul>
+      <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/editor', 'Dasturlash muharriri')}${link('#/pricing', '💎 PRO')}</ul>
       <div class="d-flex gap-2 align-items-center mt-3 mt-lg-0">${u ? html`
         <a class="btn btn-light-soft btn-sm d-flex align-items-center gap-2" href="${dashHome(u.role)}"><span class="avatar" style="width:28px;height:28px;font-size:.7rem">${initials}</span>Mening panelim</a>
         <button class="btn btn-sm btn-outline-secondary" data-action="logout" title="Chiqish"><i class="bi bi-box-arrow-right"></i> Chiqish</button>` : html`
@@ -65,4 +65,3 @@ export function dash(role, content) {
 export const pageHead = (title, sub = '', actions = '') => html`<div class="page-head"><div><h1>${title}</h1>${sub ? html`<p>${sub}</p>` : ''}</div><div class="d-flex gap-2 flex-wrap">${actions}</div></div>`;
 export const statCard = (icon, color, value, label) => html`<div class="card-sp stat-card"><div class="icon i-${color}"><i class="bi ${icon}"></i></div><div><div class="val">${value}</div><div class="lbl">${label}</div></div></div>`;
 export { raw };
-
