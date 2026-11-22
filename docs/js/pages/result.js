@@ -9,7 +9,7 @@ export default async function (ctx) {
   ctx.render(html`<div class="container py-5 page-enter">
     <div class="page-head"><div><a href="#/candidate/history" class="small text-muted"><i class="bi bi-arrow-left"></i> Testlar tarixi</a><h1 class="mt-1">Test natijalari</h1>
       <p>${r.job.title} · ${r.job.company_name} · ${fmtDateTime(r.finished_at)}</p></div>
-      <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" id="pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF yuklab olish</button><a class="btn btn-light-soft" href="#/jobs/${r.job.id}">Qayta topshirish</a></div></div>
+      <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" id="pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF yuklab olish</button><a class="btn btn-violet" href="#/pricing"><i class="bi bi-gem me-1"></i>PRO Sertifikat & Olimpiada</a><a class="btn btn-light-soft" href="#/jobs/${r.job.id}">Qayta topshirish</a></div></div>
     ${resultView(r, html`<div class="card-sp card-pad mb-4"><div class="row g-3 text-center">
       <div class="col-6 col-md-3"><div class="text-muted small">Minimal ball</div><div class="fs-4 fw-bold">${r.job.min_score}</div></div>
       <div class="col-6 col-md-3"><div class="text-muted small">Sizning ballingiz</div><div class="fs-4 fw-bold ${r.total_score >= r.job.min_score ? 'text-success' : 'text-warning'}">${Math.round(r.total_score)}</div></div>

@@ -7,15 +7,15 @@ export const dashHome = (role) => DASH_HOME[role] || '#/';
 
 const SIDE = {
   candidate: [
-    ['#/candidate', 'bi-grid-1x2-fill', 'Bosh panel'], ['#/companies', 'bi-buildings', 'Kompaniyalar'], ['#/jobs', 'bi-briefcase', "Ish o'rinlari"],
+    ['#/candidate', 'bi-grid-1x2-fill', 'Bosh panel'], ['#/pricing', 'bi-gem', 'PRO & Olimpiadalar'], ['#/companies', 'bi-buildings', 'Kompaniyalar'], ['#/jobs', 'bi-briefcase', "Ish o'rinlari"],
     ['#/candidate/history', 'bi-clock-history', 'Testlar tarixi'], ['#/editor', 'bi-terminal', 'Dasturlash muharriri'], ['#/candidate/profile', 'bi-person-circle', 'Mening profilim'],
   ],
   company: [
     ['#/company', 'bi-grid-1x2-fill', 'Bosh panel'], ['#/company/jobs', 'bi-briefcase', "Ish o'rinlari"], ['#/company/tests', 'bi-patch-question', 'Test yaratish'],
-    ['#/company/candidates', 'bi-people', 'Nomzodlar'], ['#/company/settings', 'bi-gear', 'Kompaniya sozlamalari'],
+    ['#/company/candidates', 'bi-people', 'Nomzodlar'], ['#/pricing', 'bi-credit-card-2-front', 'Tariflar & HR-Paket'], ['#/company/settings', 'bi-gear', 'Kompaniya sozlamalari'],
   ],
   admin: [
-    ['#/admin', 'bi-speedometer2', 'Umumiy statistika'], ['#/admin/companies', 'bi-buildings', 'Kompaniyalar'], ['#/admin/users', 'bi-people', 'Foydalanuvchilar'], ['#/admin/catalog', 'bi-tags', 'Kategoriya va texnologiyalar'],
+    ['#/admin', 'bi-speedometer2', 'Umumiy statistika'], ['#/pricing', 'bi-cash-coin', 'Monetizatsiya & Visa'], ['#/admin/companies', 'bi-buildings', 'Kompaniyalar'], ['#/admin/users', 'bi-people', 'Foydalanuvchilar'], ['#/admin/catalog', 'bi-tags', 'Kategoriya va texnologiyalar'],
   ],
 };
 
@@ -28,7 +28,7 @@ export function renderNav() {
     <a class="navbar-brand brand" href="#/"><span class="brand-mark"><i class="bi bi-shield-check"></i></span>SkillProve</a>
     <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menyu"><i class="bi bi-list fs-2"></i></button>
     <div class="collapse navbar-collapse" id="navMenu">
-      <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/editor', 'Dasturlash muharriri')}</ul>
+      <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/editor', 'Dasturlash muharriri')}${link('#/pricing', '💎 PRO & Olimpiada')}</ul>
       <div class="d-flex gap-2 align-items-center mt-3 mt-lg-0">${u ? html`
         <a class="btn btn-light-soft btn-sm d-flex align-items-center gap-2" href="${dashHome(u.role)}"><span class="avatar" style="width:28px;height:28px;font-size:.7rem">${initials}</span>Mening panelim</a>
         <button class="btn btn-sm btn-outline-secondary" data-action="logout" title="Chiqish"><i class="bi bi-box-arrow-right"></i> Chiqish</button>` : html`
