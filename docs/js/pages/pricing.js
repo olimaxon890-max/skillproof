@@ -1,63 +1,21 @@
 import { session } from '../api.js?v=8';
 import { html, toast } from '../ui.js';
 
-const CARD_STORAGE_KEY = 'sp_owner_visa_card';
-const ORDERS_STORAGE_KEY = 'sp_monetization_orders';
+// To'lov kartasi: karta kelgach shu uch qatorni to'ldiring.
+// Faqat 16 xonali karta RAQAMI va egasining ismi yoziladi. Muddati (srok), CVV va SMS kodni HECH QACHON yozmang.
+const PAYMENT_CARD_NUMBER = '';   // masalan: '4278 1234 5678 9012'
+const PAYMENT_CARD_HOLDER = '';   // masalan: 'OLIMAXON FAZLIDDINOVA'
+const CONTACT_TELEGRAM = '';      // chek yuboriladigan Telegram, masalan: 'https://t.me/username'
 
 function getCardConfig() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CARD_STORAGE_KEY) || 'null');
-    if (saved && saved.number) return saved;
-  } catch {}
-  return {
-    type: 'VISA / HUMO',
-    number: '4278 •••• •••• •••• (Karta qo\'shilmoqda)',
-    holder: 'OLIMAXON (SKILLPROVE.UZ)',
-    bank: 'O\'zbekiston (UZS / USD Multivalyuta)'
-  };
+  if (PAYMENT_CARD_NUMBER) return { number: PAYMENT_CARD_NUMBER, holder: PAYMENT_CARD_HOLDER };
+  return { number: "Karta ma'lumoti tez orada qo'shiladi", holder: '' };
 }
 
 export default async function (ctx) {
   const user = session.user;
   const isAdmin = user?.role === 'admin';
   const card = getCardConfig();
-  const isPro = localStorage.getItem('sp_pro_active_' + (user?.id || 'guest')) === '1';
-
-  const OLYMPIADS = [
-    {
-      id: 'olymp-js',
-      badge: '🔥 YAQINLASHMOQDA • SHANBA 18:00',
-      title: 'Frontend va JavaScript Respublika Onlayn Olimpiadasi',
-      fee: '20 000 so\'m',
-      prize: '1 500 000 so\'m + 1-darajali QR-Diplom',
-      participants: 84,
-      maxParticipants: 120,
-      techs: ['HTML5', 'CSS3', 'JavaScript', 'Algorithm'],
-      color: '#4f46e5'
-    },
-    {
-      id: 'olymp-py',
-      badge: '⚡ QABUL OCHIQ • YAKSHANBA 17:00',
-      title: 'Python va Algoritmik Masalalar Haftalik Turniri',
-      fee: '20 000 so\'m',
-      prize: '1 200 000 so\'m + Oltin Sertifikat',
-      participants: 67,
-      maxParticipants: 100,
-      techs: ['Python', 'Data Structures', 'SQL'],
-      color: '#0284c7'
-    },
-    {
-      id: 'olymp-girls',
-      badge: '🌸 MAXSUS TURNIR • JUMA 16:00',
-      title: 'Raqamli Avlod Qizlari: Web & STEAM Chempionati',
-      fee: '15 000 so\'m',
-      prize: '1 000 000 so\'m + VIP Mentorlik va Sertifikat',
-      participants: 92,
-      maxParticipants: 100,
-      techs: ['Web Design', 'JavaScript', 'Ijodiy Kodlash'],
-      color: '#db2777'
-    }
-  ];
 
   ctx.render(html`<div class="container py-4 page-enter">
     <!-- Hero Banner -->
@@ -67,48 +25,25 @@ export default async function (ctx) {
           <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-3">
             <i class="bi bi-gem me-1"></i>SKILLPROVE MONETIZATSIYA VA IMKONIYATLAR EKOTIZIMI
           </span>
-          <h1 class="display-6 fw-bold text-white mb-2">Bilimingizni rasmiy sertifikat, olimpiada sovrinlari va PRO karyeraga aylantiring!</h1>
+          <h1 class="display-6 fw-bold text-white mb-2">Bilimingizni rasmiy sertifikat va PRO karyeraga aylantiring!</h1>
           <p class="opacity-90 mb-0" style="font-size:1.05rem;">
-            O'quvchilar uchun rasmiy QR-sertifikatlar va sovrinli olimpiadalar, o'quv markazlari uchun Anti-Cheat imtihon tizimi hamda IT-kompaniyalar uchun saralangan dasturchilar bazasi.
+            O'quvchilar uchun rasmiy QR-sertifikatlar, o'quv markazlari uchun Anti-Cheat imtihon tizimi hamda IT-kompaniyalar uchun saralangan dasturchilar bazasi.
           </p>
+          <div class="small mt-3 p-2 rounded-3" style="background:rgba(0,0,0,0.22);">
+            <i class="bi bi-info-circle me-1"></i>Bu sahifa SkillProve'ning daromad modelini ko'rsatadi. To'lov qabul qilish karta ulangach ishga tushadi; ba'zi imkoniyatlar (yopiq savollar bazasi, o'quv markazlari paketi) hali ishlab chiqilmoqda.
+          </div>
         </div>
         <div class="col-lg-4 text-lg-end">
           <div class="p-3 rounded-4 text-start" style="background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.28);backdrop-filter:blur(12px);">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="small fw-bold text-warning"><i class="bi bi-credit-card-2-front-fill me-1"></i>RASMIY TO'LOV KARTASI</span>
+              <span class="small fw-bold text-warning"><i class="bi bi-credit-card-2-front-fill me-1"></i>TO'LOV KARTASI</span>
               <span class="badge bg-light text-dark fw-bold">VISA / HUMO</span>
             </div>
             <div class="fs-6 fw-bold font-monospace mb-1" id="card-num-display">${card.number}</div>
             <div class="small opacity-75">${card.holder}</div>
-            ${isPro ? html`<div class="mt-2 badge bg-success w-100 py-2"><i class="bi bi-patch-check-fill me-1"></i>Sizda PRO status faol!</div>` : ''}
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Admin yoki Ega uchun Visa Karta Sozlamasi -->
-    <div class="card-sp card-pad mb-4 border-primary" style="background:linear-gradient(135deg,#f5f3ff,#fdf2f8);">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-          <span class="badge bg-violet text-white mb-1"><i class="bi bi-credit-card me-1"></i>SHAXSIY VISA KARTA BOSHQARUVI</span>
-          <h5 class="mb-1 fw-bold text-navy">Visa kartangiz qo'lingizga tekkanda raqamini shu yerdan kiritasiz</h5>
-          <p class="small text-muted mb-0">Kiritilgan 16 xonali Visa / Humo karta raqami barcha to'lov oynalarida avtomatik chiqadi.</p>
-        </div>
-        <button class="btn btn-outline-primary btn-sm fw-bold" id="toggle-card-cfg">
-          <i class="bi bi-gear-fill me-1"></i>Visa karta raqamini sozlash
-        </button>
-      </div>
-      <form id="card-cfg-form" class="row g-2 mt-3 d-none">
-        <div class="col-md-5">
-          <input class="form-control" id="cfg-num" placeholder="Masalan: 4278 1234 5678 9012" value="${card.number}">
-        </div>
-        <div class="col-md-4">
-          <input class="form-control" id="cfg-holder" placeholder="Karta egasi (Ism Familiya)" value="${card.holder}">
-        </div>
-        <div class="col-md-3">
-          <button class="btn btn-primary w-100" type="submit"><i class="bi bi-check2-circle me-1"></i>Saqlash</button>
-        </div>
-      </form>
     </div>
 
     <!-- 1- va 4-YO'L: NOMZODLAR VA O'QUVCHILAR UCHUN TARIFLAR -->
@@ -191,49 +126,6 @@ export default async function (ctx) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 3-YO'L: HAFTALIK PULLIK ONLAYN OLIMPIADALAR VA TURNIRLAR -->
-    <div class="mb-5">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <div>
-          <span class="chip chip-violet">3-yo'nalish • Turnir va Olimpiadalar</span>
-          <h3 class="fw-bold mt-1 mb-0">🏆 Sovrinli Haftalik Onlayn Olimpiadalar</h3>
-          <p class="text-muted small mb-0">Badal to'lab qatnashing, Anti-Cheat tizimida halol bellashing va pul mukofotlari hamda 1-darajali Diplom yutib oling!</p>
-        </div>
-      </div>
-
-      <div class="row g-4">
-        ${OLYMPIADS.map((o) => html`
-        <div class="col-lg-4">
-          <div class="card-sp card-pad h-100 d-flex flex-column justify-content-between" style="border-top:5px solid ${o.color}">
-            <div>
-              <span class="badge rounded-pill mb-2" style="background:${o.color};color:#fff;">${o.badge}</span>
-              <h5 class="fw-bold mb-2">${o.title}</h5>
-              <div class="p-3 rounded-3 mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span class="text-muted">🎁 Sovrin jamg'armasi:</span>
-                  <b class="text-success">${o.prize}</b>
-                </div>
-                <div class="d-flex justify-content-between small mb-1">
-                  <span class="text-muted">🎟️ Qatnashish badali:</span>
-                  <b class="text-navy">${o.fee}</b>
-                </div>
-                <div class="d-flex justify-content-between small">
-                  <span class="text-muted">👥 Ro'yxatdan o'tdi:</span>
-                  <b>${o.participants} / ${o.maxParticipants} ishtirokchi</b>
-                </div>
-              </div>
-              <div class="d-flex flex-wrap gap-1 mb-3">
-                ${o.techs.map((t) => html`<span class="chip">${t}</span>`)}
-              </div>
-            </div>
-            <button class="btn btn-primary w-100 fw-bold" data-pay="Olimpiada: ${o.title}|${o.fee}|${o.id}">
-              <i class="bi bi-trophy-fill me-1"></i>Olimpiadaga yozilish (${o.fee})
-            </button>
-          </div>
-        </div>`)}
       </div>
     </div>
 
@@ -323,7 +215,7 @@ export default async function (ctx) {
       <div class="bg-white rounded-4 p-4 shadow-lg" style="max-width:480px;width:100%;border:2px solid #7c3aed;">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <span class="badge bg-violet text-white mb-1">XAVFSIZ TO'LOV OYNASI</span>
+            <span class="badge bg-violet text-white mb-1">TO'LOV MA'LUMOTI</span>
             <h5 class="fw-bold mb-0 text-navy" id="pm-title">Xizmatni faollashtirish</h5>
           </div>
           <button type="button" class="btn-close" id="pm-close"></button>
@@ -342,54 +234,27 @@ export default async function (ctx) {
           </div>
         </div>
 
-        <form id="pm-form">
-          <div class="mb-2">
-            <label class="form-label small fw-bold">To'lov usulini tanlang:</label>
-            <div class="d-flex gap-2">
-              <label class="border rounded-3 p-2 flex-fill text-center small fw-bold" style="cursor:pointer;"><input type="radio" name="pm_method" value="Visa / Humo P2P" checked class="me-1">💳 Visa / Humo</label>
-              <label class="border rounded-3 p-2 flex-fill text-center small fw-bold" style="cursor:pointer;"><input type="radio" name="pm_method" value="Click" class="me-1">🔵 Click</label>
-              <label class="border rounded-3 p-2 flex-fill text-center small fw-bold" style="cursor:pointer;"><input type="radio" name="pm_method" value="Payme" class="me-1">🟢 Payme</label>
-            </div>
-          </div>
-          <div class="mb-2">
-            <label class="form-label small fw-bold">Ism-familiyangiz va Telegram / Telefon raqamingiz *</label>
-            <input class="form-control" id="pm-contact" required placeholder="Masalan: Jasur Karimov (+998 90 123 45 67)" value="${user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : ''}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label small fw-bold">To'lov cheki raqami yoki izoh (ixtiyoriy)</label>
-            <input class="form-control" id="pm-note" placeholder="Karta qo'shilgach chek ID kiritiladi">
-          </div>
-          <button type="submit" class="btn btn-primary w-100 btn-lg fw-bold">
-            <i class="bi bi-shield-check me-2"></i>Tasdiqlash va Faollashtirish
-          </button>
-        </form>
+        <div class="small mb-3">
+          <b>To'lov tartibi:</b>
+          <ol class="ps-3 mb-0 mt-1" style="line-height:1.8;">
+            <li>Yuqoridagi kartaga ko'rsatilgan summani o'tkazing (Visa/Humo, Click yoki Payme orqali).</li>
+            <li>To'lov chekini (skrinshot) va ism-familiyangizni bizga yuboring.</li>
+            <li>To'lov tekshirilgach xizmat faollashtiriladi.</li>
+          </ol>
+        </div>
+        ${PAYMENT_CARD_NUMBER && CONTACT_TELEGRAM
+          ? html`<a class="btn btn-primary w-100 btn-lg fw-bold" href="${CONTACT_TELEGRAM}" target="_blank" rel="noopener"><i class="bi bi-telegram me-2"></i>Chekni yuborish</a>`
+          : html`<div class="alert alert-warning small mb-0">To'lov qabul qilish tez orada ishga tushadi.</div>`}
       </div>
     </div>
   </div>`);
 
   const $ = (s) => ctx.root.querySelector(s);
 
-  // Visa Card Configuration toggle & save
-  $('#toggle-card-cfg').onclick = () => $('#card-cfg-form').classList.toggle('d-none');
-  $('#card-cfg-form').onsubmit = (e) => {
-    e.preventDefault();
-    const num = $('#cfg-num').value.trim();
-    const holder = $('#cfg-holder').value.trim() || 'OLIMAXON (SKILLPROVE.UZ)';
-    if (!num) return toast('Karta raqamini kiriting', 'warning');
-    localStorage.setItem(CARD_STORAGE_KEY, JSON.stringify({ type: 'VISA / HUMO', number: num, holder }));
-    $('#card-num-display').textContent = num;
-    $('#pm-card-num').textContent = num;
-    $('#pm-card-holder').textContent = holder;
-    $('#card-cfg-form').classList.add('d-none');
-    toast('Shaxsiy Visa / Humo karta raqamingiz muvaffaqiyatli saqlandi!', 'success');
-  };
-
   // Payment Modal handling
-  let activePlanKey = '';
   ctx.root.querySelectorAll('[data-pay]').forEach((btn) => {
     btn.onclick = () => {
-      const [title, amount, key] = btn.dataset.pay.split('|');
-      activePlanKey = key;
+      const [title, amount] = btn.dataset.pay.split('|');
       $('#pm-title').textContent = title;
       $('#pm-amount').textContent = amount;
       $('#pay-modal').classList.remove('d-none');
@@ -397,25 +262,4 @@ export default async function (ctx) {
   });
 
   $('#pm-close').onclick = () => $('#pay-modal').classList.add('d-none');
-
-  $('#pm-form').onsubmit = (e) => {
-    e.preventDefault();
-    const contact = $('#pm-contact').value.trim();
-    if (!contact) return toast('Aloqa raqamingizni kiriting', 'warning');
-    const orders = JSON.parse(localStorage.getItem(ORDERS_STORAGE_KEY) || '[]');
-    orders.push({
-      id: Date.now(),
-      plan: $('#pm-title').textContent,
-      amount: $('#pm-amount').textContent,
-      contact,
-      note: $('#pm-note').value.trim(),
-      created_at: new Date().toISOString()
-    });
-    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
-    if (activePlanKey === 'pro' || activePlanKey === 'cert') {
-      localStorage.setItem('sp_pro_active_' + (user?.id || 'guest'), '1');
-    }
-    $('#pay-modal').classList.add('d-none');
-    toast('So\'rovingiz qabul qilindi va xizmat faollashtirildi!', 'success');
-  };
 }
