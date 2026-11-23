@@ -1,4 +1,4 @@
-import { session } from '../api.js?v=8';
+import { api, session } from '../api.js?v=8';
 import { html, toast } from '../ui.js';
 
 // To'lov kartasi: karta kelgach shu uch qatorni to'ldiring.
@@ -234,6 +234,7 @@ export default async function (ctx) {
           </div>
         </div>
 
+        <div id="pm-order" class="mb-3"></div>
         <div class="small mb-3">
           <b>To'lov tartibi:</b>
           <ol class="ps-3 mb-0 mt-1" style="line-height:1.8;">
@@ -253,11 +254,21 @@ export default async function (ctx) {
 
   // Payment Modal handling
   ctx.root.querySelectorAll('[data-pay]').forEach((btn) => {
-    btn.onclick = () => {
-      const [title, amount] = btn.dataset.pay.split('|');
+    btn.onclick = async () => {
+      const [title, amount, key] = btn.dataset.pay.split('|');
       $('#pm-title').textContent = title;
       $('#pm-amount').textContent = amount;
+      const box = $('#pm-order'); box.textContent = '';
+      const note = (cls, text) => { const d = document.createElement('div'); d.className = 'alert alert-' + cls + ' small mb-0'; d.textContent = text; box.appendChild(d); };
       $('#pay-modal').classList.remove('d-none');
+      const product = { 'b2b-hr': 'hr_vip', pro: 'pro' }[key];
+      if (!product) return note('info', 'Bu xizmat hali ishlab chiqilmoqda. Tez orada ishga tushadi.');
+      if (!session.user) return note('warning', 'Buyurtma berish uchun avval tizimga kiring.');
+      try {
+        const o = await api.post('/billing/orders', { product });
+        box.innerHTML = '<div class="p-2 rounded-3 border"><div class="small text-muted">Buyurtma kodi</div><div class="fs-4 fw-bold font-monospace" id="pm-code"></div><div class="small">To\'lov chekiga shu kodni yozing yoki chek bilan birga yuboring.</div></div>';
+        box.querySelector('#pm-code').textContent = o.code;
+      } catch (e) { note('danger', e.message); }
     };
   });
 
