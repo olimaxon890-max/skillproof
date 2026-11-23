@@ -1,3 +1,4 @@
+import { QUESTION_BANK } from './questionBank.js';
 // GitHub Pages (statik hosting) uchun to'liq LocalStorage + In-Browser API emulatori.
 // Node.js backend mavjud bo'lmaganda (masalan *.github.io da) avtomatik ishga tushadi!
 
@@ -9,6 +10,23 @@ const VERDICTS = {
   review: "Qo'shimcha tekshiruv talab etiladi",
   no: 'Hozircha talabga mos emas',
 };
+
+// Savollar bazasini kengaytirish: brauzerdagi mavjud bazaga ham yangi savollar qo'shiladi (eski natijalar buzilmaydi)
+function upgradeDb(db) {
+  if ((db.qbank_v || 0) >= 2) return db;
+  const have = new Set(db.questions.map((q) => q.text));
+  let id = Math.max(0, ...db.questions.map((q) => q.id)) + 1;
+  for (const q of QUESTION_BANK) {
+    const t = db.technologies.find((x) => x.name === q.tech);
+    if (!t || have.has(q.text)) continue;
+    db.questions.push({ ...q, id: id++, technology_id: t.id });
+    have.add(q.text);
+  }
+  for (const j of db.jobs) if (j.questions_per_tech === 3) { j.questions_per_tech = 5; j.duration_min = (j.duration_min || 25) + 10; }
+  db.qbank_v = 2;
+  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch {}
+  return db;
+}
 
 function initDb() {
   try {
@@ -25,7 +43,7 @@ function initDb() {
       if (Array.isArray(parsed.users)) {
         parsed.users = parsed.users.filter((x) => !/googlemail|kernlim|emailnator/i.test(x.email || ''));
       }
-      return parsed;
+      return upgradeDb(parsed);
     } catch {}
   }
   const categories = [
@@ -138,7 +156,7 @@ function initDb() {
   ];
   const db = { categories, technologies, companies, jobs, questions, users, attempts, activity: [{ action: 'seed', details: 'Demo baza yuklandi', created_at: new Date().toISOString(), email: 'tizim' }] };
   localStorage.setItem(DB_KEY, JSON.stringify(db));
-  return db;
+  return upgradeDb(db);
 }
 
 const saveDb = (db) => localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -174,11 +192,43 @@ function runJsInBrowser(code, tests) {
 // Parol sessiyaga (brauzer xotirasiga) yozilmasligi uchun
 const safeUser = ({ pass, ...rest }) => rest;
 
+const PRODUCTS = { hr_vip: { amount: 190000, role: 'company', days: 30 }, pro: { amount: 49000, role: 'candidate', days: 30 } };
+const plusDays = (from, days) => { const d = from && from > new Date().toISOString() ? new Date(from) : new Date(); d.setDate(d.getDate() + days); return d.toISOString(); };
+const maskEmail = (e = '') => String(e).replace(/^(.).*(@.*)$/, '$1***$2');
+// Kontaktlar faqat HR VIP faol bo'lsa va nomzod rozilik bergan bo'lsa ochiladi (demo nomzodlar uchun rozilik belgilanmagan = ochiq)
+const contactsOpen = (company, usr) => !!company?.hr_until && company.hr_until > new Date().toISOString() && usr?.contact_consent !== false;
+
 export async function handleMock(method, rawPath, body, currentUser) {
   const db = initDb();
   const [path, qs] = rawPath.split('?');
   const query = Object.fromEntries(new URLSearchParams(qs || ''));
   const u = currentUser ? db.users.find((x) => x.id === currentUser.id) : null;
+
+  // --- BUYURTMALAR ---
+  if (path.startsWith('/billing')) {
+    if (!u) { const e = new Error('Tizimga kiring'); e.status = 401; throw e; }
+    db.orders ||= [];
+    let bm;
+    if (method === 'POST' && path === '/billing/orders') {
+      const p = PRODUCTS[body.product];
+      if (!p) throw new Error('Bu xizmat hali mavjud emas');
+      if (p.role !== u.role) throw new Error(p.role === 'company' ? 'Bu xizmat faqat kompaniyalar uchun' : 'Bu xizmat faqat nomzodlar uchun');
+      let o = db.orders.find((x) => x.user_id === u.id && x.product === body.product && x.status === 'pending');
+      if (!o) { o = { id: Math.max(0, ...db.orders.map((x) => x.id)) + 1, user_id: u.id, company_id: u.company_id || null, product: body.product, amount: p.amount, status: 'pending', created_at: new Date().toISOString() }; db.orders.push(o); saveDb(db); }
+      return { ...o, code: 'SP-' + o.id };
+    }
+    if (method === 'GET' && path === '/billing/orders') return db.orders.filter((x) => x.user_id === u.id).map((o) => ({ ...o, code: 'SP-' + o.id })).reverse();
+    if (u.role !== 'admin') throw new Error("Ruxsat yo'q");
+    if (method === 'GET' && path === '/billing/admin/orders') return db.orders.map((o) => ({ ...o, code: 'SP-' + o.id, email: db.users.find((x) => x.id === o.user_id)?.email || '' })).reverse();
+    if (method === 'PUT' && (bm = path.match(/^\/billing\/admin\/orders\/(\d+)\/activate$/))) {
+      const o = db.orders.find((x) => x.id === +bm[1]);
+      if (!o) throw new Error('Buyurtma topilmadi');
+      if (o.status === 'active') throw new Error('Buyurtma allaqachon faollashtirilgan');
+      if (o.product === 'hr_vip') { const c = db.companies.find((x) => x.id === o.company_id); if (c) c.hr_until = plusDays(c.hr_until, PRODUCTS.hr_vip.days); }
+      if (o.product === 'pro') { const t = db.users.find((x) => x.id === o.user_id); if (t) t.pro_until = plusDays(t.pro_until, PRODUCTS.pro.days); }
+      o.status = 'active'; o.activated_at = new Date().toISOString(); saveDb(db); return { ok: true };
+    }
+  }
 
   // --- AUTH ---
   if (method === 'POST' && path === '/auth/login') {
@@ -257,7 +307,7 @@ export async function handleMock(method, rawPath, body, currentUser) {
       db.companies.push({ id: cid, name: body.company_name, slug: 'co-' + cid, industry: body.industry || '', city: 'Toshkent', size: '10-50', logo: '', status: 'pending', description: '', created_at: new Date().toISOString() });
     }
     const uid = Math.max(0, ...db.users.map((x) => x.id)) + 1;
-    const nu = { id: uid, email: rawEmail, pass: pw, role: body.role || 'candidate', first_name: body.first_name, last_name: body.last_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: cid, created_at: new Date().toISOString() };
+    const nu = { id: uid, email: rawEmail, pass: pw, contact_consent: !!body.contact_consent, role: body.role || 'candidate', first_name: body.first_name, last_name: body.last_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: cid, created_at: new Date().toISOString() };
     db.users.push(nu);
     saveDb(db);
     return { token: 'mock-jwt-' + nu.id, user: safeUser(nu) };
@@ -331,7 +381,19 @@ export async function handleMock(method, rawPath, body, currentUser) {
   if (method === 'POST' && path === '/candidate/attempts') {
     const job = db.jobs.find((j) => j.id === +body.job_id);
     const reqIds = job.requirements.map((r) => r.id);
-    const qids = db.questions.filter((q) => reqIds.includes(q.technology_id)).map((q) => q.id);
+    // Har bir texnologiyadan tasodifiy questions_per_tech ta savol tanlanadi (kod savollari texnologiyaga ko'pi bilan 2 ta)
+    const perTech = job.questions_per_tech || 4;
+    const qids = [];
+    for (const tid of reqIds) {
+      const pool = db.questions.filter((q) => q.technology_id === tid).sort(() => Math.random() - 0.5);
+      let codeCount = 0, picked = 0;
+      for (const q of pool) {
+        if (picked >= perTech) break;
+        if (q.type === 'code' && codeCount >= 2) continue;
+        if (q.type === 'code') codeCount++;
+        qids.push(q.id); picked++;
+      }
+    }
     const id = Math.max(0, ...db.attempts.map((a) => a.id)) + 1;
     db.attempts.push({ id, user_id: u.id, job_id: job.id, company_id: job.company_id, status: 'in_progress', question_ids: qids.length ? qids : [1, 2, 5, 7], started_at: new Date().toISOString(), deadline: new Date(Date.now() + job.duration_min * 60000).toISOString(), decision: 'pending', answers: {} });
     saveDb(db);
@@ -457,14 +519,16 @@ export async function handleMock(method, rawPath, body, currentUser) {
     if (method === 'GET' && path === '/company/candidates') {
       return db.attempts.filter((a) => a.company_id === cid && a.status === 'done' && (!query.job_id || a.job_id === +query.job_id)).map((a) => {
         const usr = db.users.find((x) => x.id === a.user_id) || {};
-        return { ...a, job_title: db.jobs.find((j) => j.id === a.job_id)?.title || '', first_name: usr.first_name, last_name: usr.last_name, email: usr.email, phone: usr.phone, verdict_label: VERDICTS[a.verdict] };
+        return { ...a, job_title: db.jobs.find((j) => j.id === a.job_id)?.title || '', first_name: usr.first_name, last_name: usr.last_name, ...(contactsOpen(db.companies.find((c) => c.id === cid), usr) ? { email: usr.email, phone: usr.phone } : { email: maskEmail(usr.email), phone: '', contacts_locked: true }), verdict_label: VERDICTS[a.verdict] };
       });
     }
     if (method === 'GET' && (m = path.match(/^\/company\/attempts\/(\d+)$/))) {
       const a = db.attempts.find((x) => x.id === +m[1]);
       const usr = db.users.find((x) => x.id === a.user_id);
       const job = db.jobs.find((j) => j.id === a.job_id);
-      return { ...a, user: usr, job, verdict_label: VERDICTS[a.verdict], requirements: job.requirements, review: [] };
+      const { pass: _p, ...pub } = usr || {};
+      const open = contactsOpen(db.companies.find((c) => c.id === cid), usr);
+      return { ...a, user: open ? pub : { ...pub, email: maskEmail(pub.email), phone: '', contacts_locked: true }, job, verdict_label: VERDICTS[a.verdict], requirements: job.requirements, review: [] };
     }
     if (method === 'POST' && (m = path.match(/^\/company\/attempts\/(\d+)\/decision$/))) {
       const a = db.attempts.find((x) => x.id === +m[1]);
