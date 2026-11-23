@@ -15,7 +15,7 @@ const SIDE = {
     ['#/company/candidates', 'bi-people', 'Nomzodlar'], ['#/pricing', 'bi-credit-card-2-front', 'Tariflar & HR-Paket'], ['#/company/settings', 'bi-gear', 'Kompaniya sozlamalari'],
   ],
   admin: [
-    ['#/admin', 'bi-speedometer2', 'Umumiy statistika'], ['#/pricing', 'bi-cash-coin', 'Monetizatsiya & Visa'], ['#/admin/companies', 'bi-buildings', 'Kompaniyalar'], ['#/admin/users', 'bi-people', 'Foydalanuvchilar'], ['#/admin/catalog', 'bi-tags', 'Kategoriya va texnologiyalar'],
+    ['#/admin', 'bi-speedometer2', 'Umumiy statistika'], ['#/pricing', 'bi-cash-coin', 'Monetizatsiya & Visa'], ['#/admin/companies', 'bi-buildings', 'Kompaniyalar'], ['#/admin/orders', 'bi-receipt', "To'lovlar"], ['#/admin/users', 'bi-people', 'Foydalanuvchilar'], ['#/admin/catalog', 'bi-tags', 'Kategoriya va texnologiyalar'],
   ],
 };
 
