@@ -101,6 +101,7 @@ export default async function (ctx) {
           ${login ? '' : html`<div class="form-text small mt-1"><i class="bi bi-shield-lock-fill text-violet me-1"></i>Bu SkillProve uchun <b>yangi</b> parol. Elektron pochtangizning yoki boshqa saytlarning parolini yozmang.</div>`}
         </div>
 
+        ${login ? '' : html`<div class="form-check mb-3 small" id="cc-wrap" ${role === 'company' ? 'style="display:none"' : ''}><input type="checkbox" class="form-check-input" name="contact_consent" id="cc"><label class="form-check-label" for="cc">Ish beruvchilar test natijalarim bilan birga telefon va pochtamni ko'rishiga roziman (ixtiyoriy)</label></div>`}
         <div class="alert alert-danger py-2 small d-none" id="err"></div>
         <button class="btn btn-primary w-100 btn-lg mt-2" type="submit" id="submit-btn">${login ? 'Kirish' : "Ro'yxatdan o'tish"}</button></form>
       <p class="text-center mt-4 text-muted">${login ? html`Hisobingiz yo'qmi? <a href="#/register">Ro'yxatdan o'ting</a>` : html`Hisobingiz bormi? <a href="#/login">Kirish</a>`}</p>
@@ -113,7 +114,7 @@ export default async function (ctx) {
   if (login && ctx.query.email) f.email.value = ctx.query.email;
 
   ctx.root.querySelector('#eye').onclick = () => { const i = f.password; i.type = i.type === 'password' ? 'text' : 'password'; };
-  f.querySelectorAll('[name=role]').forEach((r) => (r.onchange = () => ctx.root.querySelector('#co').classList.toggle('d-none', r.value !== 'company' || !r.checked)));
+  f.querySelectorAll('[name=role]').forEach((r) => (r.onchange = () => { ctx.root.querySelector('#co').classList.toggle('d-none', r.value !== 'company' || !r.checked); const w = ctx.root.querySelector('#cc-wrap'); if (w && r.checked) w.style.display = r.value === 'company' ? 'none' : ''; }));
   ctx.root.querySelectorAll('[data-demo]').forEach((b) => (b.onclick = () => { const [e, p] = b.dataset.demo.split('|'); f.email.value = e; f.password.value = p; }));
 
   // Ro'yxatdan o'tishda ism va pochta tekshiruvi (xato bo'lsa matn qaytaradi)
@@ -165,6 +166,7 @@ export default async function (ctx) {
   f.onsubmit = async (e) => {
     e.preventDefault(); err.classList.add('d-none');
     const d = formData(f);
+    d.contact_consent = !!f.querySelector('[name=contact_consent]')?.checked && d.role !== 'company';
     for (const k of ['email', 'first_name', 'last_name', 'company_name', 'industry']) if (typeof d[k] === 'string') d[k] = d[k].trim();
     const fail = (m) => {
       err.textContent = m; err.classList.remove('d-none');
