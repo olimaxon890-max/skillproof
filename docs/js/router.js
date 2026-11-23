@@ -13,7 +13,7 @@ const ROUTES = [
   ['/test/:id', 'test', ['candidate'], { bare: true }], ['/result/:id', 'result', ['candidate']],
   ['/company', 'companyDashboard', ['company']], ['/company/jobs', 'companyJobs', ['company']], ['/company/tests', 'companyTests', ['company']],
   ['/company/candidates', 'companyCandidates', ['company']], ['/company/candidates/:id', 'companyCandidate', ['company']], ['/company/settings', 'companySettings', ['company']],
-  ['/admin', 'adminDashboard', ['admin']], ['/admin/companies', 'adminCompanies', ['admin']], ['/admin/users', 'adminUsers', ['admin']], ['/admin/catalog', 'adminCatalog', ['admin']],
+  ['/admin', 'adminDashboard', ['admin']], ['/admin/companies', 'adminCompanies', ['admin']], ['/admin/orders', 'adminOrders', ['admin']], ['/admin/users', 'adminUsers', ['admin']], ['/admin/catalog', 'adminCatalog', ['admin']],
 ].map(([path, page, roles, opts = {}]) => ({ path, page, roles, opts, re: new RegExp('^' + path.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$') }));
 
 const cleanups = [];
@@ -75,4 +75,3 @@ export function logout() {
   navigate('/');
   render();
 }
-
