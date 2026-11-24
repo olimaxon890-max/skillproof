@@ -69,6 +69,8 @@ export default async function (ctx) {
   const role = ctx.query.role === 'company' ? 'company' : 'candidate';
   try { if (ctx.query.demo === '1') localStorage.setItem('sp_demo', '1'); if (ctx.query.demo === '0') localStorage.setItem('sp_demo', '0'); } catch {}
   let demoOn = true; try { demoOn = localStorage.getItem('sp_demo') !== '0'; } catch {}
+  const isWebOrigin = location.protocol === 'https:' || location.protocol === 'http:';
+  const showGoogleBtn = !!(GOOGLE_CLIENT_ID && isWebOrigin);
 
   ctx.render(html`<div class="auth-wrap page-enter">
     <div class="auth-art"><h2>${login ? 'Qaytganingiz bilan!' : "SkillProve'ga xush kelibsiz"}</h2><p class="opacity-75 mb-4">Haqiqiy bilimga asoslangan yollash platformasi.</p>
@@ -76,7 +78,7 @@ export default async function (ctx) {
         <li><i class="bi bi-check-circle-fill me-2"></i>Kompaniya talablariga moslik tahlili</li><li><i class="bi bi-check-circle-fill me-2"></i>QR-kodli PDF sertifikatlar va verifikatsiya</li></ul></div>
     <div class="auth-form"><div class="box"><h2 class="mb-1">${login ? 'Tizimga kirish' : "Ro'yxatdan o'tish"}</h2>
       <p class="text-muted mb-4">${login ? "Hisobingizga kirish uchun ma'lumotlarni kiriting." : "Yangi hisob yarating, bir daqiqa vaqt oladi."}</p>
-      ${GOOGLE_CLIENT_ID ? html`<div class="mb-3"><div id="g-btn" class="d-flex justify-content-center" style="min-height:44px;"></div>
+      ${showGoogleBtn ? html`<div class="mb-3"><div id="g-btn" class="d-flex justify-content-center" style="min-height:44px;"></div>
         <div class="text-center text-muted small mt-3">— yoki pochta va parol bilan —</div></div>` : ''}
       <form id="f" novalidate>
         ${login ? '' : html`<div class="role-pick mb-3"><input type="radio" name="role" id="r1" value="candidate" ${role === 'candidate' ? 'checked' : ''}><label for="r1"><i class="bi bi-person-workspace"></i>Ish izlovchi</label>
@@ -171,7 +173,7 @@ export default async function (ctx) {
     window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogle, ux_mode: 'popup', auto_select: false });
     window.google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: login ? 'signin_with' : 'signup_with', width: 320 });
   }
-  if (GOOGLE_CLIENT_ID) initGoogle();
+  if (showGoogleBtn) initGoogle();
 
   f.onsubmit = async (e) => {
     e.preventDefault(); err.classList.add('d-none');

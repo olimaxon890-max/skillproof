@@ -341,7 +341,30 @@ export async function handleMock(method, rawPath, body, currentUser) {
   const db = initDb();
   const [path, qs] = rawPath.split('?');
   const query = Object.fromEntries(new URLSearchParams(qs || ''));
-  const u = currentUser ? db.users.find((x) => x.id === currentUser.id) : null;
+  let u = currentUser ? db.users.find((x) => x.id === currentUser.id || (currentUser.email && x.email.toLowerCase() === currentUser.email.toLowerCase())) : null;
+  if (currentUser && !u) {
+    u = {
+      id: currentUser.id || (Math.max(0, ...db.users.map((x) => x.id)) + 1),
+      email: currentUser.email || 'user@gmail.com',
+      pass: 'Restored123!',
+      role: currentUser.role || 'candidate',
+      first_name: currentUser.first_name || 'Foydalanuvchi',
+      last_name: currentUser.last_name || '',
+      phone: currentUser.phone || '+998 90 123 45 67',
+      city: currentUser.city || 'Toshkent',
+      direction: currentUser.direction || 'Frontend dasturchi',
+      bio: currentUser.bio || '',
+      skills: currentUser.skills || 'HTML5, CSS3, JavaScript',
+      status: 'active',
+      is_pro: !!currentUser.is_pro,
+      consent_contacts: true,
+      unlocked_certs: [1, 2],
+      company_id: currentUser.company_id || (currentUser.role === 'company' ? 1 : null),
+      created_at: currentUser.created_at || new Date().toISOString()
+    };
+    db.users.push(u);
+    saveDb(db);
+  }
   let m;
 
   // --- AUTH ---

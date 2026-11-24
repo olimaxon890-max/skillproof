@@ -37,7 +37,7 @@ function detect() {
 }
 
 async function callMock(method, path, body) {
-  const { handleMock } = await import('./mockBackend.js?v=10');
+  const { handleMock } = await import('./mockBackend.js?v=12');
   try {
     return await handleMock(method, path, body, session.user);
   } catch (e) {
@@ -86,7 +86,7 @@ export const api = {
   del: (p) => request('DELETE', p),
   async download(path, filename) {
     if ((await detect()) === 'mock') {
-      const { handleMockDownload } = await import('./mockBackend.js?v=10');
+      const { handleMockDownload } = await import('./mockBackend.js?v=12');
       if (handleMockDownload && await handleMockDownload(path, filename, session.user)) return;
       window.print();
       return;
