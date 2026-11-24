@@ -1,6 +1,6 @@
 // Hash asosidagi router: sahifalarni dinamik yuklaydi, rollarni tekshiradi
-import { session, api } from './api.js?v=13';
-import { renderNav, renderFooter, dashHome } from './components/layout.js?v=13';
+import { session, api } from './api.js?v=14';
+import { renderNav, renderFooter, dashHome } from './components/layout.js?v=14';
 import { skeletonPage, toast, destroyCharts, html } from './ui.js';
 
 const ROUTES = [
@@ -70,7 +70,7 @@ export async function render() {
     cleanup: (f) => cleanups.push(f),
   };
   try {
-    const mod = await import(`./pages/${route.page}.js?v=13`);
+    const mod = await import(`./pages/${route.page}.js?v=14`);
     await mod.default(ctx);
   } catch (e) {
     console.error(e);

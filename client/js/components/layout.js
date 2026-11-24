@@ -45,7 +45,7 @@ export function renderNav() {
     <a class="navbar-brand brand" href="#/"><span class="brand-mark"><i class="bi bi-shield-check"></i></span>SkillProve</a>
     <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menyu"><i class="bi bi-list fs-2"></i></button>
     <div class="collapse navbar-collapse" id="navMenu">
-      <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/exam', 'Imtihon kodi')}${link('#/verify/SP-2026-0001', 'QR-Tekshiruv')}${link('#/pricing', '💎 PRO')}</ul>
+      <ul class="navbar-nav mx-auto gap-lg-1">${link('#/', 'Bosh sahifa')}${link('#/companies', 'Kompaniyalar')}${link('#/jobs', "Ish o'rinlari")}${link('#/editor', 'Dasturlash muharriri')}${link('#/pricing', '💎 PRO')}</ul>
       <div class="d-flex gap-2 align-items-center mt-3 mt-lg-0">${u ? html`
         <a class="btn btn-light-soft btn-sm d-flex align-items-center gap-2" href="${dashHome(u.role)}"><span class="avatar" style="width:28px;height:28px;font-size:.7rem">${initials}</span>Mening panelim ${u.is_pro ? html`<span class="badge bg-warning text-dark">⭐</span>` : ''}</a>
         <button class="btn btn-sm btn-outline-secondary" data-action="logout" title="Chiqish"><i class="bi bi-box-arrow-right"></i> Chiqish</button>` : html`

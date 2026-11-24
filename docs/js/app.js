@@ -1,4 +1,4 @@
-import { render, logout } from './router.js?v=13';
+import { render, logout } from './router.js?v=14';
 
 window.addEventListener('hashchange', render);
 document.addEventListener('click', (e) => {
