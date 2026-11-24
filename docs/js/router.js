@@ -22,6 +22,7 @@ const ROUTES = [
   ['/company/candidates', 'companyCandidates', ['company']], ['/company/candidates/:id', 'companyCandidate', ['company']], ['/company/settings', 'companySettings', ['company']],
   ['/admin', 'adminDashboard', ['admin']],
   ['/admin/payments', 'adminPayments', ['admin']],
+  ['/admin/orders', 'adminPayments', ['admin']],
   ['/admin/companies', 'adminCompanies', ['admin']], ['/admin/users', 'adminUsers', ['admin']], ['/admin/catalog', 'adminCatalog', ['admin']],
 ].map(([path, page, roles, opts = {}]) => ({ path, page, roles, opts, re: new RegExp('^' + path.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$') }));
 

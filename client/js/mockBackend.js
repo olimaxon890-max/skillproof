@@ -1,3 +1,4 @@
+import { QUESTION_BANK } from './questionBank.js';
 // GitHub Pages (statik hosting) uchun to'liq LocalStorage + In-Browser API emulatori.
 // Node.js backend mavjud bo'lmaganda (masalan *.github.io yoki skillprove.uz da) avtomatik ishga tushadi!
 
@@ -9,6 +10,22 @@ const VERDICTS = {
   review: "Qo'shimcha tekshiruv talab etiladi",
   no: 'Hozircha talabga mos emas',
 };
+
+function upgradeDb(db) {
+  if ((db.qbank_v || 0) >= 2) return db;
+  const have = new Set(db.questions.map((q) => q.text));
+  let id = Math.max(0, ...db.questions.map((q) => q.id)) + 1;
+  for (const q of QUESTION_BANK) {
+    const t = db.technologies.find((x) => x.name === q.tech);
+    if (!t || have.has(q.text)) continue;
+    db.questions.push({ ...q, id: id++, technology_id: t.id });
+    have.add(q.text);
+  }
+  for (const j of db.jobs) if (j.questions_per_tech === 3) { j.questions_per_tech = 5; j.duration_min = (j.duration_min || 25) + 10; }
+  db.qbank_v = 2;
+  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch {}
+  return db;
+}
 
 const TECH_DEEP_ANALYSIS = {
   HTML5: {
@@ -100,7 +117,7 @@ function initDb() {
       }
       parsed.orders ??= [];
       parsed.exam_sessions ??= [];
-      return parsed;
+      return upgradeDb(parsed);
     } catch {}
   }
   const categories = [
@@ -240,7 +257,7 @@ function initDb() {
     activity: [{ action: 'seed', details: 'SkillProve v4 bazasi yuklandi', created_at: new Date().toISOString(), email: 'tizim' }]
   };
   localStorage.setItem(DB_KEY, JSON.stringify(db));
-  return db;
+  return upgradeDb(db);
 }
 
 const saveDb = (db) => localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -541,7 +558,18 @@ export async function handleMock(method, rawPath, body, currentUser) {
   if (method === 'POST' && path === '/candidate/attempts') {
     const job = db.jobs.find((j) => j.id === +body.job_id);
     const reqIds = job.requirements.map((r) => r.id);
-    const qids = db.questions.filter((q) => reqIds.includes(q.technology_id)).map((q) => q.id);
+    const perTech = job.questions_per_tech || 4;
+    const qids = [];
+    for (const tid of reqIds) {
+      const pool = db.questions.filter((q) => q.technology_id === tid).sort(() => Math.random() - 0.5);
+      let codeCount = 0, picked = 0;
+      for (const q of pool) {
+        if (picked >= perTech) break;
+        if (q.type === 'code' && codeCount >= 2) continue;
+        if (q.type === 'code') codeCount++;
+        qids.push(q.id); picked++;
+      }
+    }
     const id = Math.max(0, ...db.attempts.map((a) => a.id)) + 1;
     db.attempts.push({ id, cert_id: certCodeFor(id), user_id: u.id, job_id: job.id, company_id: job.company_id, status: 'in_progress', question_ids: qids.length ? qids : [1, 2, 5, 7], started_at: new Date().toISOString(), deadline: new Date(Date.now() + job.duration_min * 60000).toISOString(), decision: 'pending', answers: {} });
     saveDb(db);
