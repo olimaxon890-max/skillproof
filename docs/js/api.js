@@ -1,5 +1,5 @@
 // API mijozi: Node.js backend mavjud bo'lsa u bilan ishlaydi,
-// aks holda (masalan GitHub Pages *.github.io da) avtomatik ravishda
+// aks holda (masalan GitHub Pages *.github.io yoki skillprove.uz da) avtomatik ravishda
 // brauzer ichidagi to'liq funksional mockBackend ga ulanadi!
 const KEY = 'sp_token', UKEY = 'sp_user';
 
@@ -20,10 +20,7 @@ export const session = {
   clear() { localStorage.removeItem(KEY); localStorage.removeItem(UKEY); },
 };
 
-// Backend rejimi bir marta aniqlanadi va keyin o'zgarmaydi ('server' yoki 'mock').
-// Eski kodda har bir javob rejimni o'zgartirib yuborar edi, shuning uchun ba'zan
-// so'rovlar noto'g'ri joyga ketib "Xatolik yuz berdi" chiqar edi.
-let mode = location.hostname.endsWith('github.io') ? 'mock' : null;
+let mode = (location.hostname.endsWith('github.io') || location.hostname.endsWith('skillprove.uz') || location.protocol === 'file:') ? 'mock' : null;
 let detecting = null;
 function detect() {
   if (mode) return Promise.resolve(mode);
@@ -31,9 +28,8 @@ function detect() {
     if (location.protocol === 'file:') return (mode = 'mock');
     let r;
     try { r = await fetch('/api/public/stats', { headers: { Accept: 'application/json' }, cache: 'no-store' }); }
-    catch { detecting = null; throw new Error("Serverga ulanib bo'lmadi. Internet yoki serverni tekshiring"); }
+    catch { return (mode = 'mock'); }
     const ct = r.headers.get('content-type') || '';
-    // Statik hosting (GitHub Pages) API ga HTML 404/405 qaytaradi -> brauzer ichidagi baza
     mode = ct.includes('application/json') || r.status >= 500 ? 'server' : 'mock';
     return mode;
   })();
@@ -41,7 +37,7 @@ function detect() {
 }
 
 async function callMock(method, path, body) {
-  const { handleMock } = await import('./mockBackend.js?v=7');
+  const { handleMock } = await import('./mockBackend.js?v=10');
   try {
     return await handleMock(method, path, body, session.user);
   } catch (e) {
@@ -57,7 +53,6 @@ async function request(method, path, body, raw = false) {
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (session.token) headers.Authorization = 'Bearer ' + session.token;
   let res;
-  // Hosting uyg'onayotganda (502/503/504) so'rov serverga yetmagan bo'ladi, shuning uchun 2 marta qayta uriniladi
   for (let attempt = 0; ; attempt++) {
     try {
       res = await fetch('/api' + path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
@@ -73,11 +68,10 @@ async function request(method, path, body, raw = false) {
   try { data = JSON.parse(text); } catch {}
   if (!res.ok) {
     if (res.status === 401 && session.token) { session.clear(); location.hash = '#/login'; }
-    if (data.error === undefined) console.error('API xatosi', method, path, res.status, text.slice(0, 300));
     const fallback = res.status === 429 ? "Juda ko'p urinish. Birozdan keyin qayta urinib ko'ring"
       : res.status === 413 ? "Yuborilayotgan ma'lumot juda katta"
-      : res.status >= 500 ? `Server vaqtincha ishlamayapti (HTTP ${res.status}). Birozdan keyin qayta urinib ko'ring`
-      : `So'rov rad etildi (HTTP ${res.status}). Sahifani yangilab qayta urinib ko'ring`;
+      : res.status >= 500 ? `Server vaqtincha ishlamayapti (HTTP ${res.status}).`
+      : `So'rov rad etildi (HTTP ${res.status}).`;
     const err = new Error(data.error || fallback);
     err.status = res.status;
     throw err;
@@ -92,6 +86,8 @@ export const api = {
   del: (p) => request('DELETE', p),
   async download(path, filename) {
     if ((await detect()) === 'mock') {
+      const { handleMockDownload } = await import('./mockBackend.js?v=10');
+      if (handleMockDownload && await handleMockDownload(path, filename, session.user)) return;
       window.print();
       return;
     }

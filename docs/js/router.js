@@ -1,19 +1,28 @@
 // Hash asosidagi router: sahifalarni dinamik yuklaydi, rollarni tekshiradi
-import { session, api } from './api.js?v=8';
-import { renderNav, renderFooter, dashHome } from './components/layout.js?v=8';
+import { session, api } from './api.js?v=10';
+import { renderNav, renderFooter, dashHome } from './components/layout.js?v=10';
 import { skeletonPage, toast, destroyCharts, html } from './ui.js';
 
 const ROUTES = [
   ['/', 'home', null, { full: true }],
   ['/pricing', 'pricing'],
+  ['/verify', 'verify'],
+  ['/verify/:code', 'verify'],
+  ['/exam', 'examJoin'],
   ['/companies', 'companies'], ['/companies/:id', 'companyDetail'], ['/jobs', 'jobs'], ['/jobs/:id', 'jobDetail'],
   ['/login', 'auth', null, { mode: 'login' }], ['/register', 'auth', null, { mode: 'register' }],
   ['/editor', 'editor', ['candidate']],
-  ['/candidate', 'candidateDashboard', ['candidate']], ['/candidate/history', 'candidateHistory', ['candidate']], ['/candidate/profile', 'candidateProfile', ['candidate']],
+  ['/candidate', 'candidateDashboard', ['candidate']],
+  ['/candidate/prep', 'candidatePrep', ['candidate']],
+  ['/candidate/history', 'candidateHistory', ['candidate']],
+  ['/candidate/profile', 'candidateProfile', ['candidate']],
   ['/test/:id', 'test', ['candidate'], { bare: true }], ['/result/:id', 'result', ['candidate']],
   ['/company', 'companyDashboard', ['company']], ['/company/jobs', 'companyJobs', ['company']], ['/company/tests', 'companyTests', ['company']],
+  ['/company/exams', 'companyExams', ['company']],
   ['/company/candidates', 'companyCandidates', ['company']], ['/company/candidates/:id', 'companyCandidate', ['company']], ['/company/settings', 'companySettings', ['company']],
-  ['/admin', 'adminDashboard', ['admin']], ['/admin/companies', 'adminCompanies', ['admin']], ['/admin/orders', 'adminOrders', ['admin']], ['/admin/users', 'adminUsers', ['admin']], ['/admin/catalog', 'adminCatalog', ['admin']],
+  ['/admin', 'adminDashboard', ['admin']],
+  ['/admin/payments', 'adminPayments', ['admin']],
+  ['/admin/companies', 'adminCompanies', ['admin']], ['/admin/users', 'adminUsers', ['admin']], ['/admin/catalog', 'adminCatalog', ['admin']],
 ].map(([path, page, roles, opts = {}]) => ({ path, page, roles, opts, re: new RegExp('^' + path.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$') }));
 
 const cleanups = [];
@@ -60,7 +69,7 @@ export async function render() {
     cleanup: (f) => cleanups.push(f),
   };
   try {
-    const mod = await import(`./pages/${route.page}.js?v=8`);
+    const mod = await import(`./pages/${route.page}.js?v=10`);
     await mod.default(ctx);
   } catch (e) {
     console.error(e);

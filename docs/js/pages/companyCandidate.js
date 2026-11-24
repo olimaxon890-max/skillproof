@@ -11,11 +11,18 @@ export default async function (ctx) {
   const u = a.user;
   const view = { ...a, total_score: a.total_score, tech_scores: a.tech_scores };
   ctx.render(dash('company', html`<a href="#/company/candidates" class="small text-muted"><i class="bi bi-arrow-left"></i> Nomzodlar</a>
-    <div class="page-head mt-2"><div class="d-flex align-items-center gap-3">${avatar(u.first_name, u.last_name)}<div><h1>${u.first_name} ${u.last_name}</h1><p>${a.job.title} · ${fmtDateTime(a.finished_at)}</p></div></div>
+    <div class="page-head mt-2"><div class="d-flex align-items-center gap-3">${avatar(u.first_name, u.last_name)}<div><h1>${u.first_name} ${u.last_name} ${u.is_pro ? html`<span class="badge bg-warning text-dark fs-6 ms-1">⭐ PRO</span>` : ''}</h1><p>${a.job.title} · ${fmtDateTime(a.finished_at)} · <a href="#/verify/${a.cert_id || ('SP-2026-000' + a.id)}" class="font-monospace fw-bold">${a.cert_id || ('SP-2026-000' + a.id)}</a></p></div></div>
       <button class="btn btn-primary" id="pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF hisobot</button></div>
-    <div class="row g-4 mb-4"><div class="col-lg-8"><div class="card-sp card-pad h-100"><div class="card-title-sm">Aloqa va profil</div><div class="row g-2 small">
-      ${u.contacts_locked ? html`<div class="col-12"><div class="alert alert-warning small mb-0">🔒 Nomzodning email va telefoni yopiq. Ochish uchun <a href="#/pricing">HR-Recruiting paketini</a> faollashtiring (nomzod roziligi ham kerak).</div></div>` : ''}
-      <div class="col-md-6"><i class="bi bi-envelope me-2 text-violet"></i><a href="mailto:${u.email}">${u.email}</a></div><div class="col-md-6"><i class="bi bi-telephone me-2 text-violet"></i>${u.phone || '—'}</div>
+    <div class="row g-4 mb-4"><div class="col-lg-8"><div class="card-sp card-pad h-100">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <div class="card-title-sm mb-0">Aloqa va profil</div>
+        ${u.contacts_locked
+          ? html`<a href="#/pricing" class="badge bg-warning text-dark text-decoration-none px-3 py-2"><i class="bi bi-lock-fill me-1"></i>Kontaktlar yopiq — HR-Recruiting paketini yoqing (190 000 so'm)</a>`
+          : html`<span class="badge bg-success-subtle text-success px-3 py-2"><i class="bi bi-unlock-fill me-1"></i>HR-VIP Faol (Kontaktlar ochiq)</span>`}
+      </div>
+      <div class="row g-2 small">
+      <div class="col-md-6"><i class="bi bi-envelope me-2 text-violet"></i>${u.contacts_locked ? html`<span class="text-muted">${u.email}</span>` : html`<a href="mailto:${u.email}" class="fw-bold">${u.email}</a>`}</div>
+      <div class="col-md-6"><i class="bi bi-telephone me-2 text-violet"></i><span class="${u.contacts_locked ? 'text-muted' : 'fw-bold'}">${u.phone || '—'}</span></div>
       <div class="col-md-6"><i class="bi bi-geo-alt me-2 text-violet"></i>${u.city || '—'}</div><div class="col-md-6"><i class="bi bi-tag me-2 text-violet"></i>${u.direction || '—'}</div>
       <div class="col-12"><i class="bi bi-code-square me-2 text-violet"></i>${u.skills || '—'}</div><div class="col-12 text-muted">${u.bio || ''}</div></div></div></div>
     <div class="col-lg-4"><div class="card-sp card-pad h-100"><div class="card-title-sm">Yakuniy qaror</div>
@@ -35,3 +42,4 @@ export default async function (ctx) {
       toast(b.dataset.d === 'hired' ? 'Nomzod ishga qabul qilindi' : 'Nomzod rad etildi', b.dataset.d === 'hired' ? 'success' : 'info'); (await import('../router.js')).render(); } catch (e) { toast(e.message, 'error'); } })));
   ctx.root.querySelector('#pdf').onclick = async () => { try { await api.download(`/company/attempts/${a.id}/pdf`, `nomzod-${a.id}.pdf`); toast('PDF yuklab olindi'); } catch (e) { toast(e.message, 'error'); } };
 }
+

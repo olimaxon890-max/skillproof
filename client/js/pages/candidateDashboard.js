@@ -7,7 +7,8 @@ export default async function (ctx) {
   let d;
   try { d = await api.get('/candidate/dashboard'); } catch (e) { return toast(e.message, 'error'); }
   if (!ctx.isCurrent()) return;
-  ctx.render(dash('candidate', html`${pageHead('Bosh panel', 'Natijalaringiz va tavsiya etilgan vakansiyalar', html`<a class="btn btn-violet" href="#/jobs"><i class="bi bi-lightning-charge-fill me-1"></i>Yangi test topshirish</a>`)}
+  const isPro = !!(d.user?.is_pro);
+  ctx.render(dash('candidate', html`${pageHead('Bosh panel', 'Natijalaringiz va tavsiya etilgan vakansiyalar', html`${isPro ? html`<span class="badge bg-warning text-dark px-3 py-2 d-flex align-items-center"><i class="bi bi-star-fill me-1"></i>⭐ PRO Nomzod</span>` : ''}<a class="btn btn-light-soft" href="#/exam"><i class="bi bi-key-fill me-1"></i>Imtihon kodi</a><a class="btn btn-violet" href="#/jobs"><i class="bi bi-lightning-charge-fill me-1"></i>Yangi test topshirish</a>`)}
     ${d.inProgress ? html`<div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2"><span><i class="bi bi-hourglass-split me-2"></i><b>${d.inProgress.title}</b> (${d.inProgress.company_name}) testi davom etmoqda.</span><a class="btn btn-sm btn-primary" href="#/test/${d.inProgress.id}">Davom ettirish</a></div>` : ''}
     <div class="row g-4 mb-4">
       <div class="col-md-6 col-xl-3">${statCard('bi-clipboard-check', 'navy', d.stats.total, 'Topshirilgan testlar')}</div>

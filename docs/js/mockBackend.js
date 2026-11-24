@@ -1,8 +1,7 @@
-import { QUESTION_BANK } from './questionBank.js';
 // GitHub Pages (statik hosting) uchun to'liq LocalStorage + In-Browser API emulatori.
-// Node.js backend mavjud bo'lmaganda (masalan *.github.io da) avtomatik ishga tushadi!
+// Node.js backend mavjud bo'lmaganda (masalan *.github.io yoki skillprove.uz da) avtomatik ishga tushadi!
 
-const DB_KEY = 'sp_static_db_v3';
+const DB_KEY = 'sp_static_db_v4';
 
 const VERDICTS = {
   full: "Talablarga to'liq mos",
@@ -11,21 +10,77 @@ const VERDICTS = {
   no: 'Hozircha talabga mos emas',
 };
 
-// Savollar bazasini kengaytirish: brauzerdagi mavjud bazaga ham yangi savollar qo'shiladi (eski natijalar buzilmaydi)
-function upgradeDb(db) {
-  if ((db.qbank_v || 0) >= 2) return db;
-  const have = new Set(db.questions.map((q) => q.text));
-  let id = Math.max(0, ...db.questions.map((q) => q.id)) + 1;
-  for (const q of QUESTION_BANK) {
-    const t = db.technologies.find((x) => x.name === q.tech);
-    if (!t || have.has(q.text)) continue;
-    db.questions.push({ ...q, id: id++, technology_id: t.id });
-    have.add(q.text);
+const TECH_DEEP_ANALYSIS = {
+  HTML5: {
+    good: "Semantik teglar (header, main, article), formalar va Accessibility (WCAG / alt atributlari) bo'yicha mustahkam bilim.",
+    improve: "SEO meta-teglar, OpenGraph, Web Components va Canvas/SVG optimizatsiyasini chuqurroq o'rganish tavsiya etiladi.",
+    resources: "MDN Web Docs: HTML5 Semantics, web.dev Accessibility Guide"
+  },
+  CSS3: {
+    good: "Flexbox, Grid Layout, Box Model va Responsive Media Queries arxitekturasi to'g'ri qo'llanilgan.",
+    improve: "CSS Custom Properties, murakkab keyframe animatsiyalar, stacking context va GPU-accelerated rendering bo'yicha amaliyot.",
+    resources: "CSS-Tricks Complete Guide to Flexbox & Grid, Every Layout"
+  },
+  JavaScript: {
+    good: "Massiv metodlari (map, filter, reduce), Closure, Scope va funksional dasturlash mantiqi yaxshi shakllangan.",
+    improve: "Event Loop (Microtasks vs Macrotasks), Promise/Async-Await xatolarni ushlash va xotira (Garbage Collection) optimizatsiyasi.",
+    resources: "JavaScript.info (Zamonaviy JS darsligi), You Don't Know JS"
+  },
+  React: {
+    good: "Funksional komponentlar, JSX sintaksisi, Props va asosiy Hooklar (useState, useEffect) bilan ishlash ko'nikmasi.",
+    improve: "Keraksiz re-renderlarning oldini olish (useMemo, useCallback), Custom Hooks va State Management arxitekturasi.",
+    resources: "React.dev Official Docs (Thinking in React)"
+  },
+  'Node.js': {
+    good: "Express.js routing, Middleware zanjiri va RESTful API arxitekturasi bo'yicha amaliy tushuncha.",
+    improve: "Streams, Cluster/Worker Threads, JWT xavfsizligi va ma'lumotlar bazasi tranzaksiyalarini boshqarish.",
+    resources: "Node.js Design Patterns, Express.js Security Best Practices"
+  },
+  SQL: {
+    good: "SELECT, JOIN, WHERE va guruhlash (GROUP BY) so'rovlarini to'g'ri shakllantirish.",
+    improve: "Murakkab indekslash (B-Tree Indexes), Query Execution Plan va ACID tranzaksiyalar.",
+    resources: "Use The Index, Luke! (SQL Performance Guide)"
+  },
+  Python: {
+    good: "Ma'lumot turlari (list, tuple, dict), list comprehension va algoritmik mantiq.",
+    improve: "Generatorlar, Decorators, asinxron dasturlash (asyncio) va murakkab vaqt/xotira (Big-O) optimizatsiyasi.",
+    resources: "Fluent Python, Real Python Tutorials"
   }
-  for (const j of db.jobs) if (j.questions_per_tech === 3) { j.questions_per_tech = 5; j.duration_min = (j.duration_min || 25) + 10; }
-  db.qbank_v = 2;
-  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch {}
-  return db;
+};
+
+function maskEmail(email = '') {
+  const [l, d] = String(email).split('@');
+  if (!d) return '🔒 ••••••@••••.uz';
+  return `${l[0] || 'u'}•••••@${d}`;
+}
+
+function maskPhone() {
+  return '+998 •• ••• •• ••';
+}
+
+function certCodeFor(id) {
+  return 'SP-2026-' + String(id).padStart(4, '0');
+}
+
+function buildDeepAnalysis(techScores = []) {
+  return techScores.map((t) => {
+    const info = TECH_DEEP_ANALYSIS[t.name] || {
+      good: `${t.name} bo'yicha asosiy nazariy va amaliy tushunchalar shakllangan.`,
+      improve: `${t.name} bo'yicha real loyihalarda murakkab arxitektura va optimizatsiya mashqlarini ko'paytirish.`,
+      resources: `${t.name} rasmiy dokumentatsiyasi va amaliy masalalar to'plami`
+    };
+    const level = t.score >= 85 ? "Yuqori (Senior/Strong Middle daraja)" : t.score >= 70 ? "Yaxshi (Middle/Strong Junior daraja)" : "Rivojlantirish zarur (Junior/Boshlang'ich)";
+    return {
+      tech: t.name,
+      score: t.score,
+      required: t.required,
+      met: t.met,
+      level,
+      strength_detail: t.score >= 60 ? info.good : `${t.name} bo'yicha bazaviy sintaksis tanish, biroq amaliy masalalarda xatoliklar mavjud.`,
+      gap_detail: info.improve,
+      recommended_study: info.resources
+    };
+  });
 }
 
 function initDb() {
@@ -43,7 +98,9 @@ function initDb() {
       if (Array.isArray(parsed.users)) {
         parsed.users = parsed.users.filter((x) => !/googlemail|kernlim|emailnator/i.test(x.email || ''));
       }
-      return upgradeDb(parsed);
+      parsed.orders ??= [];
+      parsed.exam_sessions ??= [];
+      return parsed;
     } catch {}
   }
   const categories = [
@@ -75,8 +132,8 @@ function initDb() {
     }
   }
   const companies = [
-    { id: 1, name: 'Google Developer Team', slug: 'google-developer-team', industry: 'Axborot texnologiyalari', city: 'Toshkent / Mountain View', size: '100 000+', logo: '', status: 'approved', website: 'https://google.com', description: "Dunyoning eng yirik texnologik kompaniyasining zamonaviy veb, bulutli va sun'iy intellekt mahsulotlari ustida ishlovchi xalqaro muhandislar jamoasi.", created_at: new Date().toISOString() },
-    { id: 2, name: 'Microsoft', slug: 'microsoft', industry: 'Bulutli xizmatlar va DevOps', city: 'Redmond / Masofaviy', size: '220 000+', logo: '', status: 'approved', website: 'https://microsoft.com', description: "Microsoft — Azure bulutli platformasi, Windows, Office 365, GitHub va korporativ dasturiy yechimlar bo'yicha dunyo yetakchisi.", created_at: new Date().toISOString() },
+    { id: 1, name: 'Google Developer Team', slug: 'google-developer-team', industry: 'Axborot texnologiyalari', city: 'Toshkent / Mountain View', size: '100 000+', logo: '', status: 'approved', hr_vip: false, exam_center: true, website: 'https://google.com', description: "Dunyoning eng yirik texnologik kompaniyasining zamonaviy veb, bulutli va sun'iy intellekt mahsulotlari ustida ishlovchi xalqaro muhandislar jamoasi.", created_at: new Date().toISOString() },
+    { id: 2, name: 'Microsoft', slug: 'microsoft', industry: 'Bulutli xizmatlar va DevOps', city: 'Redmond / Masofaviy', size: '220 000+', logo: '', status: 'approved', hr_vip: true, exam_center: true, website: 'https://microsoft.com', description: "Microsoft — Azure bulutli platformasi, Windows, Office 365, GitHub va korporativ dasturiy yechimlar bo'yicha dunyo yetakchisi.", created_at: new Date().toISOString() },
     { id: 3, name: 'Amazon Web Services (AWS)', slug: 'amazon-aws', industry: 'Bulutli xizmatlar va DevOps', city: 'Sietl / Masofaviy', size: '100 000+', logo: '', status: 'approved', website: 'https://aws.amazon.com', description: "Amazon va AWS — dunyodagi eng katta bulutli infratuzilma va elektron tijorat ekotizimi. Yuqori masshtab va ishonchlilik.", created_at: new Date().toISOString() },
     { id: 4, name: 'Meta (Facebook)', slug: 'meta', industry: 'Dizayn va kreativ', city: 'Menlo Park / London', size: '67 000+', logo: '', status: 'approved', website: 'https://meta.com', description: "Meta — React, React Native va PyTorch texnologiyalarini yaratgan kompaniya. Instagram, WhatsApp va Facebook platformalari muallifi.", created_at: new Date().toISOString() },
     { id: 5, name: 'Apple', slug: 'apple', industry: 'Mobil ilovalar', city: 'Kupertino / Masofaviy', size: '160 000+', logo: '', status: 'approved', website: 'https://apple.com', description: "Apple — iPhone, iPad, Mac va iOS ekotizimi orqali mukammal dizayn hamda yuqori xavfsizlik standartlarini belgilovchi global brend.", created_at: new Date().toISOString() },
@@ -86,7 +143,7 @@ function initDb() {
     { id: 9, name: 'Payme (TBC Group)', slug: 'payme', industry: 'Fintech', city: 'Toshkent', size: '600+', logo: '', status: 'approved', website: 'https://payme.uz', description: "Payme va TBC Group — zamonaviy raqamli moliya xizmatlari, lahzalik o'tkazmalar va onlayn kreditlash bo'yicha xalqaro fintech guruhi.", created_at: new Date().toISOString() },
     { id: 10, name: 'Yandex Go Tech', slug: 'yandex-go', industry: 'Mobil ilovalar', city: 'Toshkent / Xalqaro', size: '25 000+', logo: '', status: 'approved', website: 'https://yandex.uz', description: "Yandex Go — taksi, yetkazib berish, geoservislar va sun'iy intellekt algoritmlari ustida ishlovchi yirik texnologik kompaniya.", created_at: new Date().toISOString() },
     { id: 11, name: 'Adobe & Figma Studio', slug: 'adobe-figma', industry: 'Dizayn va kreativ', city: 'San-Fransisko / Masofaviy', size: '30 000+', logo: '', status: 'approved', website: 'https://figma.com', description: "Adobe va Figma — dunyodagi barcha dizaynerlar, UI/UX mutaxassislari va kreativ jamoalar uchun asosiy dizayn ekotizimi.", created_at: new Date().toISOString() },
-    { id: 12, name: 'Nova Soft', slug: 'nova-soft', industry: 'Axborot texnologiyalari', city: 'Samarqand', size: '50-100', logo: '', status: 'approved', website: '', description: "Buyurtma asosida dasturiy mahsulotlar yaratuvchi autsorsing kompaniya. Yosh va tashabbuskor jamoa.", created_at: new Date().toISOString() },
+    { id: 12, name: 'Nova Soft Academy', slug: 'nova-soft', industry: 'Axborot texnologiyalari va Ta\'lim', city: 'Samarqand', size: '50-100', logo: '', status: 'approved', website: '', description: "Buyurtma asosida dasturiy mahsulotlar yaratuvchi va yosh dasturchilarni tayyorlovchi IT-akademiya.", created_at: new Date().toISOString() },
     { id: 13, name: 'Yangi Startap', slug: 'yangi-startap', industry: 'Startap', city: 'Toshkent', size: '10', logo: '', status: 'pending', website: '', description: 'Tasdiqlashni kutayotgan demo kompaniya', created_at: new Date().toISOString() },
   ];
   const jobs = [
@@ -128,13 +185,13 @@ function initDb() {
     { id: 1, email: 'admin@skillprove.uz', pass: 'Admin123!', role: 'admin', first_name: 'Super', last_name: 'Admin', status: 'active', company_id: null, created_at: new Date().toISOString() },
     { id: 2, email: 'hr@google-dev.uz', pass: 'Demo1234!', role: 'company', first_name: 'HR', last_name: 'Menejer', status: 'active', company_id: 1, created_at: new Date().toISOString() },
     { id: 3, email: 'hr@nova-soft.uz', pass: 'Demo1234!', role: 'company', first_name: 'HR', last_name: 'Nova', status: 'active', company_id: 2, created_at: new Date().toISOString() },
-    { id: 4, email: 'nomzod@demo.uz', pass: 'Demo1234!', role: 'candidate', first_name: 'Demo', last_name: 'Nomzod', phone: '+998901234567', city: 'Toshkent', direction: 'Frontend dasturchi', bio: "Frontend yo'nalishida o'sishni xohlovchi dasturchi.", skills: 'HTML5, CSS3, JavaScript, React', status: 'active', company_id: null, created_at: new Date().toISOString() },
-    { id: 5, email: 'aziz@demo.uz', pass: 'Demo1234!', role: 'candidate', first_name: 'Aziz', last_name: 'Karimov', phone: '+998901000000', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: 'HTML5, CSS3, JS, React', status: 'active', company_id: null, created_at: new Date().toISOString() },
-    { id: 6, email: 'malika@demo.uz', pass: 'Demo1234!', role: 'candidate', first_name: 'Malika', last_name: 'Yusupova', phone: '+998901001111', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: 'HTML5, CSS3, JS, React', status: 'active', company_id: null, created_at: new Date().toISOString() },
+    { id: 4, email: 'nomzod@demo.uz', pass: 'Demo1234!', role: 'candidate', first_name: 'Jasur', last_name: 'Karimov', phone: '+998 90 123 45 67', city: 'Toshkent', direction: 'Frontend dasturchi', bio: "Frontend yo'nalishida 2 yillik amaliy tajribaga ega dasturchi.", skills: 'HTML5, CSS3, JavaScript, React, TypeScript', status: 'active', is_pro: true, pro_until: '2026-12-25', consent_contacts: true, unlocked_certs: [1, 2], company_id: null, created_at: new Date().toISOString() },
+    { id: 5, email: 'aziz@demo.uz', pass: 'Demo1234!', role: 'candidate', first_name: 'Aziz', last_name: 'Rahimov', phone: '+998 90 777 88 99', city: 'Toshkent', direction: 'Frontend dasturchi', bio: 'React va zamonaviy veb-texnologiyalar mutaxassisi.', skills: 'HTML5, CSS3, JS, React', status: 'active', is_pro: true, pro_until: '2026-12-20', consent_contacts: true, unlocked_certs: [1], company_id: null, created_at: new Date().toISOString() },
+    { id: 6, email: 'malika@demo.uz', pass: 'Demo1234!', role: 'candidate', first_name: 'Malika', last_name: 'Yusupova', phone: '+998 93 555 44 33', city: 'Samarqand', direction: 'Frontend dasturchi', bio: 'Yosh va intiluvchan Frontend dasturchi.', skills: 'HTML5, CSS3, JS, React', status: 'active', is_pro: false, consent_contacts: true, unlocked_certs: [], company_id: null, created_at: new Date().toISOString() },
   ];
   const attempts = [
     {
-      id: 1, user_id: 5, job_id: 1, company_id: 1, status: 'done', question_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      id: 1, cert_id: 'SP-2026-0001', exam_session_id: 1, user_id: 5, job_id: 1, company_id: 1, status: 'done', question_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9],
       started_at: new Date(Date.now() - 86400000 * 2).toISOString(), finished_at: new Date(Date.now() - 86400000 * 2).toISOString(),
       total_score: 88, correct: 8, wrong: 1, practical_score: 100, verdict: 'full',
       summary: "Nomzod kompaniyaning barcha talablariga to'liq javob beradi. Umumiy bilim darajasi a'lo (88/100).",
@@ -143,20 +200,47 @@ function initDb() {
       decision: 'pending', human_score: null, company_note: '', answers: {}
     },
     {
-      id: 2, user_id: 4, job_id: 1, company_id: 1, status: 'done', question_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      id: 2, cert_id: 'SP-2026-0002', exam_session_id: 1, user_id: 4, job_id: 1, company_id: 1, status: 'done', question_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9],
       started_at: new Date(Date.now() - 86400000).toISOString(), finished_at: new Date(Date.now() - 86400000).toISOString(),
       total_score: 81, correct: 7, wrong: 2, practical_score: 100, verdict: 'interview',
-      summary: "Nomzod kompaniyaning barcha talablariga to'liq javob bermaydi. Lekin umumiy bilim darajasi yaxshi (81/100). React bo'yicha bilimini rivojlantirishi tavsiya etiladi.",
+      summary: "Nomzod kompaniyaning asosiy talablariga javob beradi. Umumiy bilim darajasi yaxshi (81/100). React bo'yicha bilimini rivojlantirishi tavsiya etiladi.",
       tech_scores: [{ name: 'HTML5', score: 90, required: 70, met: true }, { name: 'CSS3', score: 85, required: 75, met: true }, { name: 'JavaScript', score: 82, required: 80, met: true }, { name: 'React', score: 65, required: 75, met: false }],
       strengths: ["HTML5 bo'yicha yuqori natija (90 ball)", "CSS3 bo'yicha yuqori natija (85 ball)", "JavaScript bo'yicha yuqori natija (82 ball)"],
       weaknesses: ["React: 65 ball, talab 75 ball (10 ball yetishmaydi)"],
-      recommendations: ["React bo'yicha bilimingizni rivojlantirish tavsiya etiladi"],
+      recommendations: ["React Hooklar va komponent optimizatsiyasi bo'yicha amaliyotni ko'paytirish tavsiya etiladi"],
       decision: 'pending', human_score: null, company_note: '', answers: {}
     }
   ];
-  const db = { categories, technologies, companies, jobs, questions, users, attempts, activity: [{ action: 'seed', details: 'Demo baza yuklandi', created_at: new Date().toISOString(), email: 'tizim' }] };
+  const orders = [
+    {
+      id: 1, code: 'SP-1041', user_id: 4, company_id: null, plan_key: 'pro', plan_title: '⭐ PRO Nomzod Oylik Obunasi',
+      amount: "49 000 so'm", contact: 'Jasur Karimov (+998 90 123 45 67)', status: 'active',
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(), activated_at: new Date(Date.now() - 86400000 * 2).toISOString()
+    },
+    {
+      id: 2, code: 'SP-1042', user_id: 2, company_id: 1, plan_key: 'b2b-hr', plan_title: '💼 HR-Recruiting & TOP Kontaktlar Paketi',
+      amount: "190 000 so'm", contact: 'Google Developer Team (hr@google-dev.uz)', status: 'pending',
+      created_at: new Date(Date.now() - 3600000 * 3).toISOString(), activated_at: null
+    },
+    {
+      id: 3, code: 'SP-1043', user_id: 6, company_id: null, plan_key: 'cert', plan_title: '🏅 Rasmiy QR-Sertifikat va Ekspert Tahlili',
+      amount: "25 000 so'm", contact: 'Malika Yusupova (+998 93 555 44 33)', status: 'pending',
+      created_at: new Date(Date.now() - 3600000).toISOString(), activated_at: null
+    }
+  ];
+  const exam_sessions = [
+    {
+      id: 1, company_id: 1, code: 'EXAM-2026', title: 'Frontend Guruh-14 Yakuniy Imtihoni',
+      job_id: 1, duration_min: 25, max_students: 50, status: 'open',
+      created_at: new Date(Date.now() - 86400000 * 3).toISOString()
+    }
+  ];
+  const db = {
+    categories, technologies, companies, jobs, questions, users, attempts, orders, exam_sessions,
+    activity: [{ action: 'seed', details: 'SkillProve v4 bazasi yuklandi', created_at: new Date().toISOString(), email: 'tizim' }]
+  };
   localStorage.setItem(DB_KEY, JSON.stringify(db));
-  return upgradeDb(db);
+  return db;
 }
 
 const saveDb = (db) => localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -189,46 +273,59 @@ function runJsInBrowser(code, tests) {
   return { ok: passed === tests.length, passed, total: tests.length, cases, logs, mode: 'browser-sandbox' };
 }
 
-// Parol sessiyaga (brauzer xotirasiga) yozilmasligi uchun
 const safeUser = ({ pass, ...rest }) => rest;
 
-const PRODUCTS = { hr_vip: { amount: 190000, role: 'company', days: 30 }, pro: { amount: 49000, role: 'candidate', days: 30 } };
-const plusDays = (from, days) => { const d = from && from > new Date().toISOString() ? new Date(from) : new Date(); d.setDate(d.getDate() + days); return d.toISOString(); };
-const maskEmail = (e = '') => String(e).replace(/^(.).*(@.*)$/, '$1***$2');
-// Kontaktlar faqat HR VIP faol bo'lsa va nomzod rozilik bergan bo'lsa ochiladi (demo nomzodlar uchun rozilik belgilanmagan = ochiq)
-const contactsOpen = (company, usr) => !!company?.hr_until && company.hr_until > new Date().toISOString() && usr?.contact_consent !== false;
+export async function handleMockDownload(rawPath, filename, currentUser) {
+  const db = initDb();
+  const [path, qs] = rawPath.split('?');
+  const query = Object.fromEntries(new URLSearchParams(qs || ''));
+  const u = currentUser ? db.users.find((x) => x.id === currentUser.id) : null;
+
+  if (path === '/company/candidates.csv' || path.startsWith('/company/exams/')) {
+    const cid = u?.company_id || 1;
+    const co = db.companies.find((c) => c.id === cid) || {};
+    let att = db.attempts.filter((a) => a.company_id === cid && a.status === 'done');
+    const em = path.match(/^\/company\/exams\/(\d+)\/csv$/);
+    if (em) {
+      att = db.attempts.filter((a) => a.exam_session_id === +em[1] && a.status === 'done');
+    } else if (query.job_id) {
+      att = att.filter((a) => String(a.job_id) === String(query.job_id));
+    }
+    const lines = ['"ID","Sertifikat ID","Ism Familiya","Email","Telefon","Lavozim / Imtihon","Umumiy Ball","Xulosa","Sana"'];
+    att.forEach((a) => {
+      const usr = db.users.find((x) => x.id === a.user_id) || {};
+      const job = db.jobs.find((j) => j.id === a.job_id) || {};
+      const canSee = !!co.hr_vip && usr.consent_contacts !== false;
+      const email = canSee ? (usr.email || '') : maskEmail(usr.email);
+      const phone = canSee ? (usr.phone || '') : maskPhone();
+      lines.push([
+        a.id,
+        a.cert_id || certCodeFor(a.id),
+        `"${usr.first_name || ''} ${usr.last_name || ''}"`,
+        `"${email}"`,
+        `"${phone}"`,
+        `"${job.title || ''}"`,
+        Math.round(a.total_score || 0),
+        `"${VERDICTS[a.verdict] || ''}"`,
+        `"${(a.finished_at || '').slice(0, 10)}"`
+      ].join(','));
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = Object.assign(document.createElement('a'), { href: url, download: filename || 'skillprove-hisobot.csv' });
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return true;
+  }
+  return false;
+}
 
 export async function handleMock(method, rawPath, body, currentUser) {
   const db = initDb();
   const [path, qs] = rawPath.split('?');
   const query = Object.fromEntries(new URLSearchParams(qs || ''));
   const u = currentUser ? db.users.find((x) => x.id === currentUser.id) : null;
-
-  // --- BUYURTMALAR ---
-  if (path.startsWith('/billing')) {
-    if (!u) { const e = new Error('Tizimga kiring'); e.status = 401; throw e; }
-    db.orders ||= [];
-    let bm;
-    if (method === 'POST' && path === '/billing/orders') {
-      const p = PRODUCTS[body.product];
-      if (!p) throw new Error('Bu xizmat hali mavjud emas');
-      if (p.role !== u.role) throw new Error(p.role === 'company' ? 'Bu xizmat faqat kompaniyalar uchun' : 'Bu xizmat faqat nomzodlar uchun');
-      let o = db.orders.find((x) => x.user_id === u.id && x.product === body.product && x.status === 'pending');
-      if (!o) { o = { id: Math.max(0, ...db.orders.map((x) => x.id)) + 1, user_id: u.id, company_id: u.company_id || null, product: body.product, amount: p.amount, status: 'pending', created_at: new Date().toISOString() }; db.orders.push(o); saveDb(db); }
-      return { ...o, code: 'SP-' + o.id };
-    }
-    if (method === 'GET' && path === '/billing/orders') return db.orders.filter((x) => x.user_id === u.id).map((o) => ({ ...o, code: 'SP-' + o.id })).reverse();
-    if (u.role !== 'admin') throw new Error("Ruxsat yo'q");
-    if (method === 'GET' && path === '/billing/admin/orders') return db.orders.map((o) => ({ ...o, code: 'SP-' + o.id, email: db.users.find((x) => x.id === o.user_id)?.email || '' })).reverse();
-    if (method === 'PUT' && (bm = path.match(/^\/billing\/admin\/orders\/(\d+)\/activate$/))) {
-      const o = db.orders.find((x) => x.id === +bm[1]);
-      if (!o) throw new Error('Buyurtma topilmadi');
-      if (o.status === 'active') throw new Error('Buyurtma allaqachon faollashtirilgan');
-      if (o.product === 'hr_vip') { const c = db.companies.find((x) => x.id === o.company_id); if (c) c.hr_until = plusDays(c.hr_until, PRODUCTS.hr_vip.days); }
-      if (o.product === 'pro') { const t = db.users.find((x) => x.id === o.user_id); if (t) t.pro_until = plusDays(t.pro_until, PRODUCTS.pro.days); }
-      o.status = 'active'; o.activated_at = new Date().toISOString(); saveDb(db); return { ok: true };
-    }
-  }
+  let m;
 
   // --- AUTH ---
   if (method === 'POST' && path === '/auth/login') {
@@ -242,8 +339,6 @@ export async function handleMock(method, rawPath, body, currentUser) {
     return { token: 'mock-jwt-' + found.id, user: safeUser(found) };
   }
   if (method === 'POST' && path === '/auth/google') {
-    // DIQQAT: statik (serversiz) rejimda Google imzosi tekshirilmaydi, faqat tokenning mazmuni o'qiladi.
-    // Haqiqiy tekshiruv serverda bajariladi (server/routes/auth.js, /auth/google).
     const { GOOGLE_CLIENT_ID } = await import('./config.js');
     let c;
     try {
@@ -267,24 +362,20 @@ export async function handleMock(method, rawPath, body, currentUser) {
       db.companies.push({ id: gCid, name: String(body.company_name).trim(), slug: 'co-' + gCid, industry: body.industry || '', city: 'Toshkent', size: '10-50', logo: '', status: 'pending', description: '', created_at: new Date().toISOString() });
     }
     const gUid = Math.max(0, ...db.users.map((x) => x.id)) + 1;
-    const gNu = { id: gUid, email: gEmail, pass: crypto.randomUUID() + crypto.randomUUID(), role: gRole, first_name: c.given_name || String(c.name || 'Foydalanuvchi').split(' ')[0], last_name: c.family_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: gCid, created_at: new Date().toISOString() };
+    const gNu = { id: gUid, email: gEmail, pass: crypto.randomUUID(), role: gRole, first_name: c.given_name || String(c.name || 'Foydalanuvchi').split(' ')[0], last_name: c.family_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', is_pro: false, consent_contacts: true, unlocked_certs: [], company_id: gCid, created_at: new Date().toISOString() };
     db.users.push(gNu);
     saveDb(db);
     return { token: 'mock-jwt-' + gNu.id, user: safeUser(gNu), created: true };
   }
   if (method === 'POST' && path === '/auth/register') {
     const rawEmail = String(body.email || '').trim().toLowerCase();
-    if (rawEmail.includes('+')) {
-      throw new Error("Vaqtinchalik Gmail (+) aliaslaridan foydalanish qat'iyan taqiqlangan!");
-    }
+    if (rawEmail.includes('+')) throw new Error("Vaqtinchalik Gmail (+) aliaslaridan foydalanish qat'iyan taqiqlangan!");
     const mEmail = rawEmail.match(/^([a-z0-9._-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
     if (!mEmail) throw new Error("Elektron pochta manzili noto'g'ri kiritilgan.");
     const [, localPart, domainPart] = mEmail;
     const tempRe = /(googlemail|emailnator|gmailnator|smailpro|kernlim|tmpnator|temp|fake|trash|burner|throwaway|10min|dispos|guerrilla|mailinator|yopmail|mohmal|sharklasers|maildrop|getnada|harakiri|spam|crazymail|dropmail|tempmail|minutemail|mailnesia|emailondeck|inboxkitten|wegwerf)/i;
     const allowedDomains = new Set(['gmail.com', 'icloud.com', 'me.com', 'mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'yandex.ru', 'yandex.uz', 'yandex.com', 'ya.ru', 'outlook.com', 'hotmail.com', 'live.com', 'yahoo.com', 'proton.me', 'protonmail.com', 'umail.uz']);
-    if (domainPart === 'googlemail.com') {
-      throw new Error("Emailnator / @googlemail.com vaqtinchalik pochtalaridan foydalanish qat'iyan bloklangan!");
-    }
+    if (domainPart === 'googlemail.com') throw new Error("Emailnator / @googlemail.com vaqtinchalik pochtalaridan foydalanish qat'iyan bloklangan!");
     const dotCount = (localPart.match(/\./g) || []).length;
     if (dotCount > 1 || /\.\d+$/.test(localPart) || /^[a-z]\.[a-z]/.test(localPart)) {
       throw new Error("Vaqtinchalik Gmail generatori (Emailnator nuqtali formati) aniqlandi va bloklandi!");
@@ -297,6 +388,7 @@ export async function handleMock(method, rawPath, body, currentUser) {
       const ln = String(body.last_name || '').trim();
       if (fn.length < 2) throw new Error("Ismingizni kiriting.");
       if (ln.length < 2) throw new Error("Familiyangizni kiriting.");
+      if (!body.consent_contacts) throw new Error("Kompaniyalar siz bilan bog'lana olishi uchun kontaktlarni ko'rsatish roziligini belgilang.");
     }
     const pw = String(body.password || '');
     if (pw.length < 8) throw new Error("Parol kamida 8 ta belgidan iborat bo'lishi kerak");
@@ -304,16 +396,67 @@ export async function handleMock(method, rawPath, body, currentUser) {
     let cid = null;
     if (body.role === 'company') {
       cid = Math.max(0, ...db.companies.map((c) => c.id)) + 1;
-      db.companies.push({ id: cid, name: body.company_name, slug: 'co-' + cid, industry: body.industry || '', city: 'Toshkent', size: '10-50', logo: '', status: 'pending', description: '', created_at: new Date().toISOString() });
+      db.companies.push({ id: cid, name: body.company_name, slug: 'co-' + cid, industry: body.industry || '', city: 'Toshkent', size: '10-50', logo: '', status: 'pending', hr_vip: false, exam_center: false, description: '', created_at: new Date().toISOString() });
     }
     const uid = Math.max(0, ...db.users.map((x) => x.id)) + 1;
-    const nu = { id: uid, email: rawEmail, pass: pw, contact_consent: !!body.contact_consent, role: body.role || 'candidate', first_name: body.first_name, last_name: body.last_name || '', phone: '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', company_id: cid, created_at: new Date().toISOString() };
+    const nu = { id: uid, email: rawEmail, pass: pw, role: body.role || 'candidate', first_name: body.first_name, last_name: body.last_name || '', phone: body.phone || '', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: '', status: 'active', is_pro: false, consent_contacts: !!body.consent_contacts, unlocked_certs: [], company_id: cid, created_at: new Date().toISOString() };
     db.users.push(nu);
     saveDb(db);
     return { token: 'mock-jwt-' + nu.id, user: safeUser(nu) };
   }
 
-  // --- PUBLIC ---
+  // --- ORDERS / MONETIZATION FOUNDATION ---
+  if (method === 'POST' && path === '/orders') {
+    const id = Math.max(0, ...db.orders.map((o) => o.id)) + 1;
+    const code = 'SP-' + (1040 + id);
+    const ord = {
+      id,
+      code,
+      user_id: u?.id || null,
+      company_id: u?.company_id || null,
+      plan_key: body.plan_key || 'pro',
+      plan_title: body.plan_title || 'Xizmat',
+      amount: body.amount || "49 000 so'm",
+      contact: body.contact || (u ? `${u.first_name} ${u.last_name} (${u.email})` : 'Mijoz'),
+      attempt_id: body.attempt_id ? +body.attempt_id : null,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      activated_at: null
+    };
+    db.orders.unshift(ord);
+    db.activity.unshift({ action: 'order_create', details: `Yangi buyurtma ${code}: ${ord.plan_title}`, created_at: new Date().toISOString(), email: u?.email || ord.contact });
+    saveDb(db);
+    return ord;
+  }
+  if (method === 'GET' && path === '/orders/my') {
+    if (!u) return [];
+    return db.orders.filter((o) => o.user_id === u.id || (u.company_id && o.company_id === u.company_id));
+  }
+
+  // --- PUBLIC & CERTIFICATE VERIFICATION ---
+  if (method === 'GET' && (m = path.match(/^\/public\/verify\/([^/]+)$/))) {
+    const rawCode = decodeURIComponent(m[1]).trim().toUpperCase();
+    const a = db.attempts.find((x) => x.status === 'done' && ((x.cert_id || certCodeFor(x.id)).toUpperCase() === rawCode || String(x.id) === rawCode));
+    if (!a || a.total_score <= 0) throw new Error("Bunday raqamli rasmiy sertifikat topilmadi yoki bekor qilingan.");
+    const usr = db.users.find((x) => x.id === a.user_id) || {};
+    const job = db.jobs.find((j) => j.id === a.job_id) || {};
+    const co = db.companies.find((c) => c.id === a.company_id) || {};
+    return {
+      cert_id: a.cert_id || certCodeFor(a.id),
+      attempt_id: a.id,
+      candidate_name: `${usr.first_name || 'Nomzod'} ${usr.last_name || ''}`.trim(),
+      direction: usr.direction || 'IT Mutaxassisi',
+      is_pro: !!usr.is_pro,
+      job_title: job.title || 'Kompleks malaka sinovi',
+      company_name: co.name || 'SkillProve',
+      total_score: Math.round(a.total_score),
+      practical_score: a.practical_score ?? 100,
+      verdict: a.verdict,
+      verdict_label: VERDICTS[a.verdict] || '',
+      tech_scores: a.tech_scores || [],
+      finished_at: a.finished_at
+    };
+  }
   if (method === 'GET' && path === '/public/stats') {
     return {
       companies: db.companies.filter((c) => c.status === 'approved').length,
@@ -333,7 +476,6 @@ export async function handleMock(method, rawPath, body, currentUser) {
     return db.companies.filter((c) => c.status === 'approved' && (c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)) && c.industry.toLowerCase().includes(ind))
       .map((c) => ({ ...c, open_jobs: db.jobs.filter((j) => j.company_id === c.id && j.status === 'open').length }));
   }
-  let m;
   if (method === 'GET' && (m = path.match(/^\/public\/companies\/(\d+)$/))) {
     const c = db.companies.find((x) => x.id === +m[1] && x.status === 'approved');
     if (!c) throw new Error('Kompaniya topilmadi');
@@ -343,7 +485,7 @@ export async function handleMock(method, rawPath, body, currentUser) {
     const q = (query.q || '').toLowerCase(), cat = query.category || '';
     return db.jobs.filter((j) => j.status === 'open' && (!cat || String(j.category_id) === String(cat))).map((j) => {
       const c = db.companies.find((x) => x.id === j.company_id);
-      return { ...j, company_name: c?.name || '', company_logo: c?.logo || '', category: db.categories.find((k) => k.id === j.category_id)?.name || '' };
+      return { ...j, company_name: c?.name || '', company_logo: c?.logo || '', hr_vip: !!c?.hr_vip, category: db.categories.find((k) => k.id === j.category_id)?.name || '' };
     }).filter((j) => j.title.toLowerCase().includes(q) || j.company_name.toLowerCase().includes(q));
   }
   if (method === 'GET' && (m = path.match(/^\/public\/jobs\/(\d+)$/))) {
@@ -356,17 +498,35 @@ export async function handleMock(method, rawPath, body, currentUser) {
 
   // --- CANDIDATE ---
   if (path === '/candidate/profile') {
-    if (method === 'GET') return u;
+    if (method === 'GET') return safeUser(u);
     Object.assign(u, body); saveDb(db); return { ok: true };
+  }
+  if (method === 'POST' && path === '/candidate/join-exam') {
+    const code = String(body.code || '').trim().toUpperCase();
+    const sess = db.exam_sessions.find((s) => s.code.toUpperCase() === code && s.status === 'open');
+    if (!sess) throw new Error("Bunday imtihon kodi topilmadi yoki sessiya yopilgan (Masalan: EXAM-2026 kiriting)");
+    const job = db.jobs.find((j) => j.id === sess.job_id) || db.jobs[0];
+    const reqIds = job.requirements.map((r) => r.id);
+    const qids = db.questions.filter((q) => reqIds.includes(q.technology_id)).map((q) => q.id);
+    const id = Math.max(0, ...db.attempts.map((a) => a.id)) + 1;
+    db.attempts.push({
+      id, cert_id: certCodeFor(id), exam_session_id: sess.id, user_id: u.id, job_id: job.id, company_id: sess.company_id,
+      status: 'in_progress', question_ids: qids.length ? qids : [1, 2, 5, 7],
+      started_at: new Date().toISOString(), deadline: new Date(Date.now() + (sess.duration_min || 25) * 60000).toISOString(),
+      decision: 'pending', answers: {}
+    });
+    saveDb(db);
+    return { id, session_title: sess.title };
   }
   if (method === 'GET' && path === '/candidate/dashboard') {
     const my = db.attempts.filter((a) => a.user_id === u.id).map((a) => ({
-      ...a, title: db.jobs.find((j) => j.id === a.job_id)?.title || '', company_name: db.companies.find((c) => c.id === a.company_id)?.name || ''
+      ...a, cert_id: a.cert_id || certCodeFor(a.id), title: db.jobs.find((j) => j.id === a.job_id)?.title || '', company_name: db.companies.find((c) => c.id === a.company_id)?.name || ''
     })).reverse();
     const done = my.filter((a) => a.status === 'done');
     const techAgg = {};
     done.forEach((a) => (a.tech_scores || []).forEach((t) => { (techAgg[t.name] ??= []).push(t.score); }));
     return {
+      user: safeUser(u),
       stats: { total: done.length, avg: done.length ? Math.round(done.reduce((s, x) => s + x.total_score, 0) / done.length) : 0, best: done.length ? Math.max(...done.map((x) => Math.round(x.total_score))) : 0, matched: done.filter((x) => ['full', 'interview'].includes(x.verdict)).length },
       techs: Object.entries(techAgg).map(([name, v]) => ({ name, score: Math.round(v.reduce((a, b) => a + b, 0) / v.length) })),
       recent: my.slice(0, 6), inProgress: my.find((a) => a.status === 'in_progress') || null,
@@ -375,27 +535,15 @@ export async function handleMock(method, rawPath, body, currentUser) {
   }
   if (method === 'GET' && path === '/candidate/attempts') {
     return db.attempts.filter((a) => a.user_id === u.id).map((a) => ({
-      ...a, title: db.jobs.find((j) => j.id === a.job_id)?.title || '', company_name: db.companies.find((c) => c.id === a.company_id)?.name || '', verdict_label: VERDICTS[a.verdict] || ''
+      ...a, cert_id: a.cert_id || certCodeFor(a.id), title: db.jobs.find((j) => j.id === a.job_id)?.title || '', company_name: db.companies.find((c) => c.id === a.company_id)?.name || '', verdict_label: VERDICTS[a.verdict] || ''
     })).reverse();
   }
   if (method === 'POST' && path === '/candidate/attempts') {
     const job = db.jobs.find((j) => j.id === +body.job_id);
     const reqIds = job.requirements.map((r) => r.id);
-    // Har bir texnologiyadan tasodifiy questions_per_tech ta savol tanlanadi (kod savollari texnologiyaga ko'pi bilan 2 ta)
-    const perTech = job.questions_per_tech || 4;
-    const qids = [];
-    for (const tid of reqIds) {
-      const pool = db.questions.filter((q) => q.technology_id === tid).sort(() => Math.random() - 0.5);
-      let codeCount = 0, picked = 0;
-      for (const q of pool) {
-        if (picked >= perTech) break;
-        if (q.type === 'code' && codeCount >= 2) continue;
-        if (q.type === 'code') codeCount++;
-        qids.push(q.id); picked++;
-      }
-    }
+    const qids = db.questions.filter((q) => reqIds.includes(q.technology_id)).map((q) => q.id);
     const id = Math.max(0, ...db.attempts.map((a) => a.id)) + 1;
-    db.attempts.push({ id, user_id: u.id, job_id: job.id, company_id: job.company_id, status: 'in_progress', question_ids: qids.length ? qids : [1, 2, 5, 7], started_at: new Date().toISOString(), deadline: new Date(Date.now() + job.duration_min * 60000).toISOString(), decision: 'pending', answers: {} });
+    db.attempts.push({ id, cert_id: certCodeFor(id), user_id: u.id, job_id: job.id, company_id: job.company_id, status: 'in_progress', question_ids: qids.length ? qids : [1, 2, 5, 7], started_at: new Date().toISOString(), deadline: new Date(Date.now() + job.duration_min * 60000).toISOString(), decision: 'pending', answers: {} });
     saveDb(db);
     return { id };
   }
@@ -404,11 +552,19 @@ export async function handleMock(method, rawPath, body, currentUser) {
     const job = db.jobs.find((j) => j.id === a.job_id);
     const co = db.companies.find((c) => c.id === a.company_id);
     const qs = a.question_ids.map((id) => db.questions.find((q) => q.id === id)).filter(Boolean);
-    const base = { id: a.id, status: a.status, job: { ...job, company_name: co.name }, deadline: a.deadline, serverNow: new Date().toISOString() };
+    const cert_id = a.cert_id || certCodeFor(a.id);
+    const cert_unlocked = !!(u?.is_pro || (u?.unlocked_certs || []).includes(a.id));
+    const base = { id: a.id, cert_id, cert_unlocked, is_pro: !!u?.is_pro, candidate_name: `${u?.first_name || ''} ${u?.last_name || ''}`.trim(), status: a.status, job: { ...job, company_name: co.name }, deadline: a.deadline, serverNow: new Date().toISOString() };
     if (a.status === 'in_progress') {
       return { ...base, questions: qs.map((q) => ({ ...q, publicTests: (q.tests || []).filter((t) => !t.hidden), hiddenTests: (q.tests || []).filter((t) => t.hidden).length, response: a.answers?.[q.id]?.response ?? null })) };
     }
-    return { ...base, ...a, verdict_label: VERDICTS[a.verdict], requirements: job.requirements, review: qs.map((q) => ({ id: q.id, text: q.text, tech: q.tech, type: q.type, score: a.answers?.[q.id]?.score ?? 0.8 })) };
+    return {
+      ...base, ...a, cert_id, cert_unlocked,
+      verdict_label: VERDICTS[a.verdict],
+      requirements: job.requirements,
+      deep_analysis: buildDeepAnalysis(a.tech_scores || []),
+      review: qs.map((q) => ({ id: q.id, text: q.text, tech: q.tech, type: q.type, score: a.answers?.[q.id]?.score ?? 0.8 }))
+    };
   }
   if (method === 'POST' && (m = path.match(/^\/candidate\/attempts\/(\d+)\/answer$/))) {
     const a = db.attempts.find((x) => x.id === +m[1]);
@@ -456,6 +612,7 @@ export async function handleMock(method, rawPath, body, currentUser) {
     const unmet = tech_scores.filter((t) => t.required != null && !t.met);
     const verdict = body?.cheated ? 'no' : (!unmet.length && total >= job.min_score ? 'full' : total >= job.min_score ? 'interview' : total >= 50 ? 'review' : 'no');
     Object.assign(a, {
+      cert_id: a.cert_id || certCodeFor(a.id),
       status: 'done', finished_at: new Date().toISOString(), total_score: total, tech_scores: body?.cheated ? tech_scores.map((t) => ({ ...t, score: 0, met: false })) : tech_scores, correct: body?.cheated ? 0 : correct, wrong: body?.cheated ? qs.length : wrong, practical_score: body?.cheated ? 0 : 100, verdict,
       summary: body?.cheated
         ? `🚫 TEST BLOKLANDI (Anti-Cheat): ${body.reason || "Nomzod imtihon vaqtida boshqa oynaga yoki sahifaga o'tgani sababli test qoidabuzarlik sifatida avtomatik bloklandi (0/100 ball)."}`
@@ -474,23 +631,60 @@ export async function handleMock(method, rawPath, body, currentUser) {
   // --- COMPANY ---
   if (path.startsWith('/company')) {
     const cid = u?.company_id || 1;
-    const co = db.companies.find((c) => c.id === cid);
+    const co = db.companies.find((c) => c.id === cid) || db.companies[0];
     if (path === '/company/profile') {
       if (method === 'GET') return co;
       Object.assign(co, body); saveDb(db); return { ok: true };
     }
+    if (method === 'GET' && path === '/company/exams') {
+      const sessions = db.exam_sessions.filter((s) => s.company_id === cid).map((s) => {
+        const job = db.jobs.find((j) => j.id === s.job_id) || {};
+        const participants = db.attempts.filter((a) => a.exam_session_id === s.id).map((a) => {
+          const usr = db.users.find((x) => x.id === a.user_id) || {};
+          return {
+            attempt_id: a.id,
+            cert_id: a.cert_id || certCodeFor(a.id),
+            name: `${usr.first_name || 'Nomzod'} ${usr.last_name || ''}`.trim(),
+            email: usr.email || '',
+            status: a.status,
+            total_score: Math.round(a.total_score || 0),
+            verdict: a.verdict,
+            cheated: (a.summary || '').includes('TEST BLOKLANDI'),
+            finished_at: a.finished_at
+          };
+        });
+        return { ...s, job_title: job.title || '', participants };
+      });
+      return { exam_center_active: !!co.exam_center, sessions, jobs: db.jobs.filter((j) => j.company_id === cid) };
+    }
+    if (method === 'POST' && path === '/company/exams') {
+      const id = Math.max(0, ...db.exam_sessions.map((s) => s.id)) + 1;
+      const code = 'EXAM-' + Math.floor(1000 + Math.random() * 9000);
+      const sess = {
+        id, company_id: cid, code,
+        title: String(body.title || 'Guruh Imtihoni').trim(),
+        job_id: +body.job_id || db.jobs.find((j) => j.company_id === cid)?.id || 1,
+        duration_min: +body.duration_min || 25,
+        max_students: +body.max_students || 50,
+        status: 'open',
+        created_at: new Date().toISOString()
+      };
+      db.exam_sessions.unshift(sess);
+      saveDb(db);
+      return sess;
+    }
     if (method === 'GET' && path === '/company/dashboard') {
       const att = db.attempts.filter((a) => a.company_id === cid && a.status === 'done').map((a) => {
         const usr = db.users.find((x) => x.id === a.user_id) || {};
-        return { ...a, title: db.jobs.find((j) => j.id === a.job_id)?.title || '', first_name: usr.first_name || 'Nomzod', last_name: usr.last_name || '' };
+        return { ...a, title: db.jobs.find((j) => j.id === a.job_id)?.title || '', first_name: usr.first_name || 'Nomzod', last_name: usr.last_name || '', is_pro: !!usr.is_pro };
       });
       const verdicts = { full: 0, interview: 0, review: 0, no: 0 };
       att.forEach((a) => verdicts[a.verdict]++);
       return {
-        company: { name: co.name, status: co.status },
+        company: { name: co.name, status: co.status, hr_vip: !!co.hr_vip, exam_center: !!co.exam_center },
         stats: { jobs: db.jobs.filter((j) => j.company_id === cid && j.status === 'open').length, candidates: att.length, avg: att.length ? Math.round(att.reduce((s, a) => s + a.total_score, 0) / att.length) : 0, hired: att.filter((a) => a.decision === 'hired').length },
-        verdicts, perJob: db.jobs.filter((j) => j.company_id === cid).map((j) => ({ id: j.id, title: j.title, avg: 82 })),
-        days: [{ day: '2026-11-04', n: 2 }, { day: '2026-11-05', n: 3 }], top: att.slice(0, 5), recent: att.slice(0, 6)
+        verdicts, perJob: db.jobs.filter((j) => j.company_id === cid).map((j) => ({ id: j.id, title: j.title, avg: 84 })),
+        days: [{ day: '2026-11-22', n: 2 }, { day: '2026-11-23', n: 4 }], top: att.slice(0, 5), recent: att.slice(0, 6)
       };
     }
     if (method === 'GET' && path === '/company/jobs') {
@@ -517,18 +711,37 @@ export async function handleMock(method, rawPath, body, currentUser) {
       saveDb(db); return { id };
     }
     if (method === 'GET' && path === '/company/candidates') {
+      const canSeeContacts = !!co.hr_vip;
       return db.attempts.filter((a) => a.company_id === cid && a.status === 'done' && (!query.job_id || a.job_id === +query.job_id)).map((a) => {
         const usr = db.users.find((x) => x.id === a.user_id) || {};
-        return { ...a, job_title: db.jobs.find((j) => j.id === a.job_id)?.title || '', first_name: usr.first_name, last_name: usr.last_name, ...(contactsOpen(db.companies.find((c) => c.id === cid), usr) ? { email: usr.email, phone: usr.phone } : { email: maskEmail(usr.email), phone: '', contacts_locked: true }), verdict_label: VERDICTS[a.verdict] };
+        const allow = canSeeContacts && usr.consent_contacts !== false;
+        return {
+          ...a,
+          cert_id: a.cert_id || certCodeFor(a.id),
+          job_title: db.jobs.find((j) => j.id === a.job_id)?.title || '',
+          first_name: usr.first_name,
+          last_name: usr.last_name,
+          is_pro: !!usr.is_pro,
+          contacts_locked: !allow,
+          email: allow ? usr.email : maskEmail(usr.email),
+          phone: allow ? usr.phone : maskPhone(),
+          verdict_label: VERDICTS[a.verdict]
+        };
       });
     }
     if (method === 'GET' && (m = path.match(/^\/company\/attempts\/(\d+)$/))) {
       const a = db.attempts.find((x) => x.id === +m[1]);
-      const usr = db.users.find((x) => x.id === a.user_id);
+      const usr = db.users.find((x) => x.id === a.user_id) || {};
       const job = db.jobs.find((j) => j.id === a.job_id);
-      const { pass: _p, ...pub } = usr || {};
-      const open = contactsOpen(db.companies.find((c) => c.id === cid), usr);
-      return { ...a, user: open ? pub : { ...pub, email: maskEmail(pub.email), phone: '', contacts_locked: true }, job, verdict_label: VERDICTS[a.verdict], requirements: job.requirements, review: [] };
+      const allow = !!co.hr_vip && usr.consent_contacts !== false;
+      const maskedUser = {
+        ...safeUser(usr),
+        contacts_locked: !allow,
+        consent_contacts: usr.consent_contacts !== false,
+        email: allow ? usr.email : maskEmail(usr.email),
+        phone: allow ? (usr.phone || '+998 90 123 45 67') : maskPhone()
+      };
+      return { ...a, cert_id: a.cert_id || certCodeFor(a.id), hr_vip: !!co.hr_vip, user: maskedUser, job, verdict_label: VERDICTS[a.verdict], requirements: job.requirements, review: [] };
     }
     if (method === 'POST' && (m = path.match(/^\/company\/attempts\/(\d+)\/decision$/))) {
       const a = db.attempts.find((x) => x.id === +m[1]);
@@ -539,13 +752,48 @@ export async function handleMock(method, rawPath, body, currentUser) {
 
   // --- ADMIN ---
   if (path.startsWith('/admin')) {
+    if (method === 'GET' && path === '/admin/orders') {
+      return db.orders;
+    }
+    if (method === 'POST' && (m = path.match(/^\/admin\/orders\/(\d+)\/(activate|reject)$/))) {
+      const ord = db.orders.find((o) => o.id === +m[1]);
+      if (!ord) throw new Error('Buyurtma topilmadi');
+      if (m[2] === 'reject') {
+        ord.status = 'rejected';
+        saveDb(db);
+        return { ok: true, order: ord };
+      }
+      ord.status = 'active';
+      ord.activated_at = new Date().toISOString();
+      const until = new Date(Date.now() + 86400000 * 30).toISOString().slice(0, 10);
+      if (ord.plan_key === 'pro' && ord.user_id) {
+        const targetU = db.users.find((x) => x.id === ord.user_id);
+        if (targetU) { targetU.is_pro = true; targetU.pro_until = until; }
+      } else if (ord.plan_key === 'cert' && ord.user_id) {
+        const targetU = db.users.find((x) => x.id === ord.user_id);
+        if (targetU) {
+          targetU.unlocked_certs ??= [];
+          if (ord.attempt_id) targetU.unlocked_certs.push(ord.attempt_id);
+          else targetU.is_pro = true;
+        }
+      } else if (ord.plan_key === 'b2b-hr') {
+        const targetCo = db.companies.find((c) => c.id === (ord.company_id || 1));
+        if (targetCo) { targetCo.hr_vip = true; targetCo.hr_vip_until = until; }
+      } else if (ord.plan_key === 'b2b-edu') {
+        const targetCo = db.companies.find((c) => c.id === (ord.company_id || 1));
+        if (targetCo) { targetCo.exam_center = true; targetCo.exam_center_until = until; }
+      }
+      db.activity.unshift({ action: 'order_activate', details: `Buyurtma ${ord.code} (${ord.plan_title}) 30 kunga faollashtirildi`, created_at: new Date().toISOString(), email: 'admin@skillprove.uz' });
+      saveDb(db);
+      return { ok: true, order: ord };
+    }
     if (method === 'GET' && path === '/admin/stats') {
       return {
         users: db.users.filter((x) => x.role === 'candidate').length, companies: db.companies.length,
         pending: db.companies.filter((c) => c.status === 'pending').length, blocked: db.companies.filter((c) => c.status === 'blocked').length,
-        jobs: db.jobs.length, questions: db.questions.length, tests: db.attempts.length, avgScore: 84,
+        jobs: db.jobs.length, questions: db.questions.length, tests: db.attempts.length, avgScore: 85,
         byCategory: db.categories.map((c) => ({ name: c.name, n: db.jobs.filter((j) => j.category_id === c.id).length })),
-        days: [{ day: '2026-11-04', n: 3 }, { day: '2026-11-05', n: 4 }], attemptsByDay: [{ day: '2026-11-04', n: 1 }, { day: '2026-11-05', n: 2 }],
+        days: [{ day: '2026-11-22', n: 3 }, { day: '2026-11-23', n: 5 }], attemptsByDay: [{ day: '2026-11-22', n: 2 }, { day: '2026-11-23', n: 4 }],
         activity: db.activity
       };
     }

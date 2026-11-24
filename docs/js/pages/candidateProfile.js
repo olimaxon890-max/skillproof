@@ -11,7 +11,7 @@ export default async function (ctx) {
   }
   ctx.render(dash('candidate', html`${pageHead('Mening profilim', "Shaxsiy ma'lumotlar va yo'nalishingiz")}
     <form id="f" class="row g-4"><div class="col-lg-4"><div class="card-sp card-pad text-center"><div class="avatar mx-auto mb-3" style="width:88px;height:88px;font-size:1.8rem">${((p.first_name || '?')[0] + (p.last_name?.[0] || '')).toUpperCase()}</div>
-      <h4 class="mb-0">${p.first_name} ${p.last_name}</h4><div class="text-muted small mb-3">${p.email}</div><span class="chip chip-violet">${p.direction || "Yo'nalish tanlanmagan"}</span>
+      <h4 class="mb-1">${p.first_name} ${p.last_name} ${p.is_pro ? html`<span class="badge bg-warning text-dark fs-6">⭐ PRO</span>` : ''}</h4><div class="text-muted small mb-3">${p.email}</div><span class="chip chip-violet">${p.direction || "Yo'nalish tanlanmagan"}</span>
       <div class="small text-muted mt-3">Ro'yxatdan o'tgan: ${new Date(p.created_at).toLocaleDateString('uz-UZ')}</div></div></div>
     <div class="col-lg-8"><div class="card-sp card-pad"><div class="row g-3">
       <div class="col-md-6"><label class="form-label">Ism</label><input class="form-control" name="first_name" value="${p.first_name}" required maxlength="60"></div>
