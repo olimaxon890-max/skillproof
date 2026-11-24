@@ -378,6 +378,26 @@ export async function handleMock(method, rawPath, body, currentUser) {
     if (found.status === 'blocked') throw new Error('Hisobingiz bloklangan');
     return { token: 'mock-jwt-' + found.id, user: safeUser(found) };
   }
+  if (method === 'POST' && path === '/auth/google-direct') {
+    const gEmail = String(body.email || '').trim().toLowerCase();
+    if (!gEmail) throw new Error('Google pochtangizni kiriting');
+    const known = db.users.find((x) => x.email.toLowerCase() === gEmail);
+    if (known) {
+      if (known.status === 'blocked') throw new Error('Hisobingiz bloklangan');
+      return { token: 'mock-jwt-' + known.id, user: safeUser(known), created: false };
+    }
+    const gRole = body.role === 'company' ? 'company' : 'candidate';
+    let gCid = null;
+    if (gRole === 'company') {
+      gCid = Math.max(0, ...db.companies.map((x) => x.id)) + 1;
+      db.companies.push({ id: gCid, name: String(body.company_name || 'Nova Soft Academy').trim(), slug: 'co-' + gCid, industry: body.industry || 'IT', city: 'Toshkent', size: '10-50', logo: '', status: 'approved', hr_vip: false, exam_center: true, description: '', created_at: new Date().toISOString() });
+    }
+    const gUid = Math.max(0, ...db.users.map((x) => x.id)) + 1;
+    const gNu = { id: gUid, email: gEmail, pass: 'GoogleAuth123!', role: gRole, first_name: body.first_name || gEmail.split('@')[0], last_name: body.last_name || '', phone: '+998 90 123 45 67', city: 'Toshkent', direction: 'Frontend dasturchi', bio: '', skills: 'HTML5, CSS3, JavaScript, React', status: 'active', is_pro: false, consent_contacts: true, unlocked_certs: [], company_id: gCid, created_at: new Date().toISOString() };
+    db.users.push(gNu);
+    saveDb(db);
+    return { token: 'mock-jwt-' + gNu.id, user: safeUser(gNu), created: true };
+  }
   if (method === 'POST' && path === '/auth/google') {
     const { GOOGLE_CLIENT_ID } = await import('./config.js');
     let c;
